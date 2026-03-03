@@ -78,24 +78,40 @@ export default function Dashboard() {
             </div>
 
             {/* Controles */}
-            <div className="flex gap-4">
-              <Input
-                placeholder="Buscar por nome ou email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Button 
-                variant="outline" 
-                onClick={() => window.location.reload()}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Importar Mais
-              </Button>
+            <div className="space-y-4">
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <label className="text-sm font-medium mb-2 block">Buscar Respondente</label>
+                  <Input
+                    placeholder="Digite o nome ou email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Importar Mais
+                </Button>
+              </div>
+              {searchTerm && (
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {filteredProfiles.length} de {profiles.length} respondentes
+                </div>
+              )}
             </div>
 
             {/* Lista de Respondentes */}
             <div>
-              <h2 className="text-2xl font-bold mb-4">Respondentes</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Respondentes</h2>
+                <span className="text-sm text-muted-foreground bg-primary/10 px-3 py-1 rounded-full">
+                  {filteredProfiles.length} {filteredProfiles.length === 1 ? 'respondente' : 'respondentes'}
+                </span>
+              </div>
               {filteredProfiles.length === 0 ? (
                 <Card className="p-8 text-center">
                   <p className="text-muted-foreground">Nenhum respondente encontrado</p>

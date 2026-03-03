@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useBigFive } from '@/contexts/BigFiveContext';
 import { DimensionCardClickable } from '@/components/DimensionCardClickable';
-import { DimensionModal } from '@/components/DimensionModal';
+import { DimensionModalExpandable } from '@/components/DimensionModalExpandable';
 import { PrintableReport } from '@/components/PrintableReport';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -172,7 +172,7 @@ export default function ProfileDetail() {
 
       {/* Modal de Detalhes da Dimensão */}
       {selectedDimension && (
-        <DimensionModal
+        <DimensionModalExpandable
           dimension={selectedDimension}
           facets={getFacetsByDimension(
             Object.entries(dimensions).find(([_, d]) => d === selectedDimension)?.[0] || '',

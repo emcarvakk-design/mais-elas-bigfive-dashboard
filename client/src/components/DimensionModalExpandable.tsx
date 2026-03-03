@@ -1,33 +1,24 @@
+import { useState } from 'react';
 import { BigFiveDimension } from '@/lib/bigfive';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
+import { Facet } from '@/lib/facets';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
+import { ChevronDown } from 'lucide-react';
 
-interface Facet {
-  name: string;
-  description: string;
-  score: number;
-}
-
-interface DimensionModalProps {
-  dimension: BigFiveDimension | null;
+interface DimensionModalExpandableProps {
+  dimension: BigFiveDimension;
   facets: Facet[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function DimensionModal({
+export function DimensionModalExpandable({
   dimension,
   facets,
   open,
   onOpenChange,
-}: DimensionModalProps) {
-  if (!dimension) return null;
+}: DimensionModalExpandableProps) {
+  const [expandedFacet, setExpandedFacet] = useState<number | null>(null);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,43 +31,67 @@ export function DimensionModal({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Resumo da Dimensão */}
-          <Card className="p-4 bg-primary/5 border-primary/20">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Escore Geral</span>
-                <span className="text-2xl font-bold text-primary">{dimension.score}%</span>
+          {/* Score Principal */}
+          <Card className="p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Score Geral</p>
+                <p className="text-4xl font-bold text-primary">{dimension.score}%</p>
               </div>
-              <Progress value={dimension.score} className="h-3" />
-              <p className="text-sm text-muted-foreground">{dimension.description}</p>
+              <div className="w-32 h-32 rounded-full border-8 border-primary/20 flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Nível</p>
+                  <p className="font-bold text-primary">{dimension.classification}</p>
+                </div>
+              </div>
             </div>
+            <p className="text-sm mt-4 text-muted-foreground italic">{dimension.description}</p>
           </Card>
 
           {/* Subfacetas */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Subfacetas</h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {facets.map((facet, idx) => (
-                <Card key={idx} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-base">{facet.name}</h4>
-                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                        {facet.score}%
-                      </span>
+                <div key={idx}>
+                  <button
+                    onClick={() => setExpandedFacet(expandedFacet === idx ? null : idx)}
+                    className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    <div className="flex items-center gap-3 flex-1 text-left">
+                      <div className="flex-1">
+                        <p className="font-semibold">{facet.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex-1 h-2 bg-border rounded-full overflow-hidden max-w-xs">
+                            <div
+                              className="h-full bg-primary transition-all"
+                              style={{ width: `${facet.score}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-bold text-primary min-w-fit">{facet.score}%</span>
+                        </div>
+                      </div>
                     </div>
-                    <Progress value={facet.score} className="h-2" />
-                    <p className="text-sm text-muted-foreground">{facet.description}</p>
-                  </div>
-                </Card>
+                    <ChevronDown
+                      className={`w-5 h-5 transition-transform ${expandedFacet === idx ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  {/* Descrição Expandida */}
+                  {expandedFacet === idx && (
+                    <Card className="mt-2 p-4 bg-muted/50 border-primary/20">
+                      <p className="text-sm leading-relaxed">{facet.description}</p>
+                    </Card>
+                  )}
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Interpretação */}
-          <Card className="p-4 bg-muted/50 border-muted">
+          {/* Interpretação Geral */}
+          <Card className="p-4 bg-accent/10 border-accent/20">
             <h4 className="font-semibold mb-2">O que significa?</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               {getInterpretation(dimension)}
             </p>
           </Card>
@@ -88,8 +103,6 @@ export function DimensionModal({
 
 function getInterpretation(dimension: BigFiveDimension): string {
   const { name, label, score } = dimension;
-
-  // Trata por name também, não apenas por label
   const dimensionName = label || name;
 
   if (!dimensionName) return 'Dimensão não identificada.';
@@ -100,7 +113,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     if (score >= 60)
       return 'Você tem uma boa abertura para novas experiências e ideias. Equilibra criatividade com praticidade, apreciando tanto inovação quanto estabilidade.';
     if (score >= 40)
-      return 'Você mantém um equilíbrio entre abertura para novas experiências e preferência por estabilidade. Aprecia rotinas, mas está aberto a mudanças quando necessário.';
+      return 'Você é moderadamente aberto a novas experiências. Aprecia algumas mudanças, mas também valoriza a familiaridade e a tradição.';
     if (score >= 20)
       return 'Você prefere estabilidade e rotinas conhecidas. Tende a ser mais prático e menos interessado em explorar novas ideias ou experiências.';
     return 'Você prefere fortemente manter as coisas como estão, com resistência a mudanças e preferência clara por rotinas estabelecidas.';
@@ -112,7 +125,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     if (score >= 60)
       return 'Você é bem organizado e responsável. Equilibra planejamento com flexibilidade, mantendo foco nos objetivos.';
     if (score >= 40)
-      return 'Você mantém um equilíbrio entre organização e espontaneidade. Consegue ser estruturado quando necessário, mas também aprecia flexibilidade.';
+      return 'Você tem um nível moderado de organização. Consegue ser responsável quando necessário, mas também aprecia flexibilidade.';
     if (score >= 20)
       return 'Você prefere espontaneidade e flexibilidade. Pode procrastinar ocasionalmente, mas é criativo e adaptável.';
     return 'Você é muito espontâneo e pode procrastinar. Prefere liberdade a estrutura rígida, podendo ser desorganizado.';
@@ -124,7 +137,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     if (score >= 60)
       return 'Você é comunicativo e confortável socialmente. Gosta de interagir com pessoas e tem boa capacidade de se expressar.';
     if (score >= 40)
-      return 'Você é ambivertido, confortável tanto em situações sociais quanto em momentos de solidão. Adapta-se bem a diferentes contextos.';
+      return 'Você é ambivertido, confortável tanto em ambientes sociais quanto em trabalho focado. Equilibra interação com reflexão.';
     if (score >= 20)
       return 'Você é mais introvertido, preferindo conexões profundas com poucas pessoas. Recarrega sua energia na solidão.';
     return 'Você é altamente introvertido, recarregando-se na solidão. Prefere profundidade nas relações a ampla rede social.';
@@ -136,7 +149,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     if (score >= 60)
       return 'Você é colaborativo e empático. Valoriza as relações e busca harmonia nos relacionamentos.';
     if (score >= 40)
-      return 'Você equilibra colaboração com assertividade. Consegue ser empático, mas também defende seus pontos de vista.';
+      return 'Você equilibra empatia com assertividade. Consegue colaborar bem, mas também mantém seus próprios interesses em mente.';
     if (score >= 20)
       return 'Você é direto e objetivo. Valoriza a verdade mais que a harmonia, podendo ser percebido como crítico.';
     return 'Você é altamente assertivo e direto. Prioriza objetivos sobre harmonia, podendo parecer insensível aos sentimentos alheios.';
