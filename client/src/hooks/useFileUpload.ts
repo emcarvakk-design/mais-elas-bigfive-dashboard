@@ -43,19 +43,50 @@ export function useFileUpload() {
     // Parsear header usando o parser robusto
     const headers = parseCSVLine(lines[0]);
 
-    // Encontrar índices das colunas importantes
-    const timestampIdx = headers.findIndex(h => 
-      h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('timestamp')
-    );
-    const emailIdx = headers.findIndex(h => 
-      h.toLowerCase().includes('e-mail') || h.toLowerCase().includes('email')
-    );
-    const nameIdx = headers.findIndex(h => 
-      h.toLowerCase().includes('nome') || h.toLowerCase().includes('name')
-    );
+    console.log('Headers encontrados:', headers);
+
+    // Encontrar índices das colunas com busca mais flexível
+    let timestampIdx = -1;
+    let emailIdx = -1;
+    let nameIdx = -1;
+
+    // Procurar timestamp/carimbo
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i].toLowerCase();
+      if (h.includes('carimbo') || h.includes('timestamp') || h.includes('data')) {
+        timestampIdx = i;
+        break;
+      }
+    }
+
+    // Procurar email
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i].toLowerCase();
+      if (h.includes('e-mail') || h.includes('email') || h.includes('endereço')) {
+        emailIdx = i;
+        break;
+      }
+    }
+
+    // Procurar nome
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i].toLowerCase();
+      if (h.includes('nome') || h.includes('name') || h.includes('respondent')) {
+        nameIdx = i;
+        break;
+      }
+    }
+
+    console.log(`Índices encontrados: timestamp=${timestampIdx}, email=${emailIdx}, nome=${nameIdx}`);
 
     if (timestampIdx === -1 || emailIdx === -1 || nameIdx === -1) {
-      throw new Error('Arquivo não contém as colunas esperadas (timestamp, email, nome)');
+      console.error('Colunas não encontradas. Headers:', headers);
+      throw new Error(
+        `Arquivo não contém as colunas esperadas.\n\n` +
+        `Procurando por: Timestamp/Carimbo, Email, Nome\n` +
+        `Colunas encontradas: ${headers.join(', ')}\n\n` +
+        `Certifique-se de que o arquivo foi exportado corretamente do Google Forms.`
+      );
     }
 
     // Questões começam na coluna 4 (índice 3)
