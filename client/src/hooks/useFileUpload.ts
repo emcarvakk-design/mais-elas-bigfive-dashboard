@@ -1,25 +1,58 @@
 import { BigFiveResponse, createProfile } from '@/lib/bigfive';
 import { nanoid } from 'nanoid';
 
+// Parsear CSV - lida com aspas e vírgulas dentro de campos
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current.trim());
+  return result;
+}
+
 export function useFileUpload() {
   const processFile = async (file: File): Promise<any[]> => {
     const text = await file.text();
     
-    // Detectar se é CSV ou TSV
+    // Dividir em linhas e filtrar vazias
     const lines = text.split('\n').filter(line => line.trim());
     if (lines.length < 2) {
       throw new Error('Arquivo vazio ou inválido');
     }
 
-    // Parsear header
-    const headerLine = lines[0];
-    const delimiter = headerLine.includes('\t') ? '\t' : ',';
-    const headers = headerLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
+    // Parsear header usando o parser robusto
+    const headers = parseCSVLine(lines[0]);
 
     // Encontrar índices das colunas importantes
-    const timestampIdx = headers.findIndex(h => h.includes('Carimbo') || h.includes('timestamp'));
-    const emailIdx = headers.findIndex(h => h.includes('e-mail') || h.includes('Email'));
-    const nameIdx = headers.findIndex(h => h.includes('nome') || h.includes('Name'));
+    const timestampIdx = headers.findIndex(h => 
+      h.toLowerCase().includes('carimbo') || h.toLowerCase().includes('timestamp')
+    );
+    const emailIdx = headers.findIndex(h => 
+      h.toLowerCase().includes('e-mail') || h.toLowerCase().includes('email')
+    );
+    const nameIdx = headers.findIndex(h => 
+      h.toLowerCase().includes('nome') || h.toLowerCase().includes('name')
+    );
 
     if (timestampIdx === -1 || emailIdx === -1 || nameIdx === -1) {
       throw new Error('Arquivo não contém as colunas esperadas (timestamp, email, nome)');
@@ -33,30 +66,42 @@ export function useFileUpload() {
       const line = lines[i];
       if (!line.trim()) continue;
 
-      const cells = line.split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
+      // Usar o parser robusto
+      const cells = parseCSVLine(line);
 
       if (cells.length < questionsStartIdx + 30) {
-        continue; // Pular linhas incompletas
+        console.warn(`Linha ${i + 1} incompleta (${cells.length} colunas), pulando...`);
+        continue;
       }
 
-      // Extrair respostas (converter "5 — Concordo totalmente" para 5)
+      // Extrair respostas numéricas (1-5) do formato "5 — Concordo totalmente"
       const responseValues: number[] = [];
       for (let j = questionsStartIdx; j < questionsStartIdx + 30; j++) {
-        const response = cells[j];
-        const match = response.match(/^(\d)/);
-        const score = match ? parseInt(match[1]) : 3;
-        responseValues.push(score);
+        const responseText = cells[j] || '3';
+        // Extrair o primeiro número (1-5)
+        const match = responseText.match(/^(\d)/);
+        const score = match ? parseInt(match[1], 10) : 3;
+        responseValues.push(Math.max(1, Math.min(5, score))); // Garantir 1-5
       }
 
-      const bigFiveResponse: BigFiveResponse = {
-        timestamp: cells[timestampIdx],
-        email: cells[emailIdx],
-        name: cells[nameIdx],
-        responses: responseValues,
-      };
+      try {
+        const bigFiveResponse: BigFiveResponse = {
+          timestamp: cells[timestampIdx],
+          email: cells[emailIdx],
+          name: cells[nameIdx],
+          responses: responseValues,
+        };
 
-      const profile = createProfile(bigFiveResponse, nanoid());
-      responses.push(profile);
+        const profile = createProfile(bigFiveResponse, nanoid());
+        responses.push(profile);
+      } catch (error) {
+        console.warn(`Erro ao processar linha ${i + 1}:`, error);
+        continue;
+      }
+    }
+
+    if (responses.length === 0) {
+      throw new Error('Nenhum perfil válido encontrado no arquivo');
     }
 
     return responses;
