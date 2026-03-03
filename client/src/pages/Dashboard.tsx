@@ -1,22 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBigFive } from '@/contexts/BigFiveContext';
 import { FileUpload } from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Users, BarChart3, Trash2 } from 'lucide-react';
+import { Users, BarChart3, Trash2, RefreshCw } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useGoogleDrive } from '@/hooks/useGoogleDrive';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const { profiles, clearData, setSelectedProfile } = useBigFive();
+  const { profiles, clearData, setSelectedProfile, addProfiles } = useBigFive();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
+  const { fetchFromGoogleSheets, loading } = useGoogleDrive();
+  const [syncing, setSyncing] = useState(false);
 
-  const filteredProfiles = profiles.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Buscar dados do Google Drive ao carregar
+  useEffect(() => {
+    const loadData = async () => {
+      if (profiles.length > 0) return;
+      
+      setSyncing(true);
+      try {
+        const fetchedProfiles = await fetchFromGoogleSheets();
+        if (fetchedProfiles.length > 0) {
+          addProfiles(fetchedProfiles);
+          toast.success(`${fetchedProfiles.length} perfil(is) carregado(s) do Google Drive!`);
+        }
+      } catch (error) {
+        toast.error('Erro ao buscar dados do Google Drive. Você pode fazer upload manual.');
+        console.error(error);
+      } finally {
+        setSyncing(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const fetchedProfiles = await fetchFromGoogleSheets();
+      clearData();
+      addProfiles(fetchedProfiles);
+      toast.success(`${fetchedProfiles.length} perfil(is) sincronizado(s)!`);
+    } catch (error) {
+      toast.error('Erro ao sincronizar dados');
+      console.error(error);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleViewProfile = (profileId: string) => {
     const profile = profiles.find((p) => p.id === profileId);
@@ -25,6 +61,24 @@ export default function Dashboard() {
       setLocation(`/profile/${profileId}`);
     }
   };
+
+  if (syncing && profiles.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <RefreshCw className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-lg font-semibold">Carregando dados do Google Drive...</p>
+          <p className="text-sm text-muted-foreground mt-2">Aguarde um momento</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const filteredProfiles = profiles.filter(
+    (p) =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,7 +92,15 @@ export default function Dashboard() {
         </div>
 
         {profiles.length === 0 ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto space-y-6">
+            {syncing && (
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <div className="flex items-center gap-2 text-blue-900">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <p>Carregando dados do Google Drive...</p>
+                </div>
+              </Card>
+            )}
             <FileUpload />
           </div>
         ) : (
@@ -69,6 +131,7 @@ export default function Dashboard() {
                   size="sm"
                   onClick={clearData}
                   className="w-full"
+                  disabled={syncing}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Limpar Dados
@@ -76,15 +139,20 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Upload adicional */}
+            {/* Controles */}
             <div className="flex gap-4">
               <Input
                 placeholder="Buscar por nome ou email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Importar Mais
+              <Button 
+                variant="outline" 
+                onClick={handleSync}
+                disabled={syncing}
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                Sincronizar
               </Button>
             </div>
 
@@ -95,33 +163,33 @@ export default function Dashboard() {
                 {filteredProfiles.map((profile) => (
                   <Card
                     key={profile.id}
-                    className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                    className="p-4 hover:shadow-lg transition-shadow cursor-pointer hover:border-primary"
                     onClick={() => handleViewProfile(profile.id)}
                   >
                     <div className="mb-3">
                       <h3 className="font-semibold text-lg truncate">{profile.name}</h3>
                       <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
                     </div>
-                    <div className="grid grid-cols-5 gap-2 text-center text-xs">
+                    <div className="grid grid-cols-5 gap-2 text-center text-xs mt-3">
                       <div>
                         <div className="text-lg">{profile.dimensions.openness.emoji}</div>
-                        <div className="font-bold text-primary">{profile.dimensions.openness.score}%</div>
+                        <div className="font-bold text-primary text-sm">{profile.dimensions.openness.score}%</div>
                       </div>
                       <div>
                         <div className="text-lg">{profile.dimensions.conscientiousness.emoji}</div>
-                        <div className="font-bold text-primary">{profile.dimensions.conscientiousness.score}%</div>
+                        <div className="font-bold text-primary text-sm">{profile.dimensions.conscientiousness.score}%</div>
                       </div>
                       <div>
                         <div className="text-lg">{profile.dimensions.extraversion.emoji}</div>
-                        <div className="font-bold text-primary">{profile.dimensions.extraversion.score}%</div>
+                        <div className="font-bold text-primary text-sm">{profile.dimensions.extraversion.score}%</div>
                       </div>
                       <div>
                         <div className="text-lg">{profile.dimensions.agreeableness.emoji}</div>
-                        <div className="font-bold text-primary">{profile.dimensions.agreeableness.score}%</div>
+                        <div className="font-bold text-primary text-sm">{profile.dimensions.agreeableness.score}%</div>
                       </div>
                       <div>
                         <div className="text-lg">{profile.dimensions.emotionalStability.emoji}</div>
-                        <div className="font-bold text-primary">{profile.dimensions.emotionalStability.score}%</div>
+                        <div className="font-bold text-primary text-sm">{profile.dimensions.emotionalStability.score}%</div>
                       </div>
                     </div>
                   </Card>
