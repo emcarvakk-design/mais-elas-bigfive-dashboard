@@ -1,5 +1,6 @@
 import { BigFiveResponse, createProfile } from '@/lib/bigfive';
 import { nanoid } from 'nanoid';
+import * as XLSX from 'xlsx';
 
 // Parsear CSV - lida com aspas e vírgulas dentro de campos
 function parseCSVLine(line: string): string[] {
@@ -32,16 +33,40 @@ function parseCSVLine(line: string): string[] {
 
 export function useFileUpload() {
   const processFile = async (file: File): Promise<any[]> => {
-    const text = await file.text();
-    
-    // Dividir em linhas e filtrar vazias
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length < 2) {
-      throw new Error('Arquivo vazio ou inválido');
-    }
+    let headers: string[] = [];
+    let rows: any[][] = [];
 
-    // Parsear header usando o parser robusto
-    const headers = parseCSVLine(lines[0]);
+    // Detectar formato do arquivo
+    const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+    if (isExcel) {
+      // Processar arquivo Excel
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      
+      // Converter para array de arrays
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      
+      if (data.length < 2) {
+        throw new Error('Arquivo vazio ou inválido');
+      }
+
+      // Primeira linha são os headers
+      headers = (data[0] || []).map(h => String(h || '').trim());
+      rows = data.slice(1);
+    } else {
+      // Processar arquivo CSV/TSV
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        throw new Error('Arquivo vazio ou inválido');
+      }
+
+      headers = parseCSVLine(lines[0]);
+      rows = lines.slice(1).map(line => parseCSVLine(line));
+    }
 
     console.log('Headers encontrados:', headers);
 
@@ -93,22 +118,21 @@ export function useFileUpload() {
     const questionsStartIdx = 3;
     const responses: any[] = [];
 
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      if (!line.trim()) continue;
+    for (let i = 0; i < rows.length; i++) {
+      const cells = rows[i];
 
-      // Usar o parser robusto
-      const cells = parseCSVLine(line);
+      // Pular linhas vazias
+      if (!cells || cells.length === 0 || !cells[nameIdx]) continue;
 
       if (cells.length < questionsStartIdx + 30) {
-        console.warn(`Linha ${i + 1} incompleta (${cells.length} colunas), pulando...`);
+        console.warn(`Linha ${i + 2} incompleta (${cells.length} colunas), pulando...`);
         continue;
       }
 
-      // Extrair respostas numéricas (1-5) do formato "5 — Concordo totalmente"
+      // Extrair respostas numéricas (1-5) do formato "5 — Concordo totalmente" ou apenas "5"
       const responseValues: number[] = [];
       for (let j = questionsStartIdx; j < questionsStartIdx + 30; j++) {
-        const responseText = cells[j] || '3';
+        const responseText = String(cells[j] || '3');
         // Extrair o primeiro número (1-5)
         const match = responseText.match(/^(\d)/);
         const score = match ? parseInt(match[1], 10) : 3;
@@ -117,16 +141,16 @@ export function useFileUpload() {
 
       try {
         const bigFiveResponse: BigFiveResponse = {
-          timestamp: cells[timestampIdx],
-          email: cells[emailIdx],
-          name: cells[nameIdx],
+          timestamp: String(cells[timestampIdx] || ''),
+          email: String(cells[emailIdx] || ''),
+          name: String(cells[nameIdx] || ''),
           responses: responseValues,
         };
 
         const profile = createProfile(bigFiveResponse, nanoid());
         responses.push(profile);
       } catch (error) {
-        console.warn(`Erro ao processar linha ${i + 1}:`, error);
+        console.warn(`Erro ao processar linha ${i + 2}:`, error);
         continue;
       }
     }
