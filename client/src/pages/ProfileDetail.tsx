@@ -1,14 +1,20 @@
+import { useState } from 'react';
 import { useBigFive } from '@/contexts/BigFiveContext';
-import { DimensionCard } from '@/components/DimensionCard';
+import { DimensionCardClickable } from '@/components/DimensionCardClickable';
+import { DimensionModal } from '@/components/DimensionModal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, AlertCircle, Lightbulb } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
+import { BigFiveDimension } from '@/lib/bigfive';
+import { getFacetsByDimension } from '@/lib/facets';
 
 export default function ProfileDetail() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/profile/:id');
   const { profiles } = useBigFive();
+  const [selectedDimension, setSelectedDimension] = useState<BigFiveDimension | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   if (!match) {
     return null;
@@ -50,12 +56,43 @@ export default function ProfileDetail() {
         {/* Dimensões */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Perfil de Personalidade</h2>
+          <p className="text-muted-foreground mb-6">Clique em cada dimensão para ver as subfacetas e descrições detalhadas</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <DimensionCard dimension={dimensions.openness} />
-            <DimensionCard dimension={dimensions.conscientiousness} />
-            <DimensionCard dimension={dimensions.extraversion} />
-            <DimensionCard dimension={dimensions.agreeableness} />
-            <DimensionCard dimension={dimensions.emotionalStability} />
+            <DimensionCardClickable
+              dimension={dimensions.openness}
+              onClick={() => {
+                setSelectedDimension(dimensions.openness);
+                setModalOpen(true);
+              }}
+            />
+            <DimensionCardClickable
+              dimension={dimensions.conscientiousness}
+              onClick={() => {
+                setSelectedDimension(dimensions.conscientiousness);
+                setModalOpen(true);
+              }}
+            />
+            <DimensionCardClickable
+              dimension={dimensions.extraversion}
+              onClick={() => {
+                setSelectedDimension(dimensions.extraversion);
+                setModalOpen(true);
+              }}
+            />
+            <DimensionCardClickable
+              dimension={dimensions.agreeableness}
+              onClick={() => {
+                setSelectedDimension(dimensions.agreeableness);
+                setModalOpen(true);
+              }}
+            />
+            <DimensionCardClickable
+              dimension={dimensions.emotionalStability}
+              onClick={() => {
+                setSelectedDimension(dimensions.emotionalStability);
+                setModalOpen(true);
+              }}
+            />
           </div>
         </div>
 
@@ -93,6 +130,19 @@ export default function ProfileDetail() {
           </div>
         )}
       </div>
+
+      {/* Modal de Detalhes da Dimensão */}
+      {selectedDimension && (
+        <DimensionModal
+          dimension={selectedDimension}
+          facets={getFacetsByDimension(
+            Object.entries(dimensions).find(([_, d]) => d === selectedDimension)?.[0] || '',
+            selectedDimension.score
+          )}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+        />
+      )}
     </div>
   );
 }
