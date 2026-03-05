@@ -1,17 +1,80 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBigFive } from '@/contexts/BigFiveContext';
 import { FileUpload } from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Users, BarChart3, Trash2, RefreshCw } from 'lucide-react';
+import { Users, BarChart3, Trash2, RefreshCw, Cloud, AlertCircle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
+import { useGoogleSheets } from '@/hooks/useGoogleSheets';
 
 export default function Dashboard() {
-  const { profiles, clearData, setSelectedProfile } = useBigFive();
+  const { profiles, clearData, setSelectedProfile, addProfiles } = useBigFive();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
+  const { fetchSheetData, loading: sheetLoading, lastUpdate } = useGoogleSheets();
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  // Buscar dados do Google Sheets ao carregar a página
+  useEffect(() => {
+    const loadDataFromSheet = async () => {
+      if (!autoSyncEnabled) return;
+      
+      try {
+        setSyncError(null);
+        const data = await fetchSheetData();
+        if (data.length > 0) {
+          addProfiles(data);
+          toast.success(`${data.length} perfil(is) sincronizado(s) do Google Sheets!`);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
+        setSyncError(errorMsg);
+        console.error('Erro ao buscar Google Sheets:', error);
+      }
+    };
+
+    loadDataFromSheet();
+  }, []);
+
+  // Sincronizar a cada 5 minutos
+  useEffect(() => {
+    if (!autoSyncEnabled) return;
+
+    const interval = setInterval(async () => {
+      try {
+        setSyncError(null);
+        const data = await fetchSheetData();
+        if (data.length > 0) {
+          addProfiles(data);
+          console.log(`Sincronizado ${data.length} perfil(is) do Google Sheets`);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
+        setSyncError(errorMsg);
+        console.error('Erro ao sincronizar Google Sheets:', error);
+      }
+    }, 5 * 60 * 1000); // 5 minutos
+
+    return () => clearInterval(interval);
+  }, [autoSyncEnabled]);
+
+  const handleManualSync = async () => {
+    try {
+      setSyncError(null);
+      const data = await fetchSheetData();
+      if (data.length > 0) {
+        addProfiles(data);
+        toast.success(`${data.length} perfil(is) sincronizado(s)!`);
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
+      setSyncError(errorMsg);
+      toast.error(errorMsg);
+    }
+  };
 
   const handleViewProfile = (profileId: string) => {
     const profile = profiles.find((p) => p.id === profileId);
@@ -38,8 +101,56 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Mensagem de Erro de Sincronização */}
+        {syncError && (
+          <Card className="p-4 mb-6 border-destructive/50 bg-destructive/10">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-destructive">Erro na sincronização</p>
+                <p className="text-sm text-muted-foreground mt-1">{syncError}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {profiles.length === 0 ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto space-y-6">
+            {/* Card de Sincronização Automática */}
+            <Card className="p-6 border-primary/20 bg-primary/5">
+              <div className="flex items-start gap-4">
+                <Cloud className="w-6 h-6 text-primary mt-1" />
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-2">Sincronização Automática Ativada</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    O dashboard está conectado ao seu Google Forms e buscará as respostas automaticamente a cada 5 minutos.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleManualSync}
+                      disabled={sheetLoading}
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${sheetLoading ? 'animate-spin' : ''}`} />
+                      {sheetLoading ? 'Sincronizando...' : 'Sincronizar Agora'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
+                    >
+                      {autoSyncEnabled ? 'Desativar Auto-Sync' : 'Ativar Auto-Sync'}
+                    </Button>
+                  </div>
+                  {lastUpdate && (
+                    <p className="text-xs text-muted-foreground mt-3">
+                      Última sincronização: {lastUpdate.toLocaleTimeString('pt-BR')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
+
             <FileUpload />
           </div>
         ) : (
@@ -91,17 +202,25 @@ export default function Dashboard() {
                 </div>
                 <Button 
                   variant="outline" 
-                  onClick={() => window.location.reload()}
+                  onClick={handleManualSync}
+                  disabled={sheetLoading}
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Importar Mais
+                  <Cloud className={`w-4 h-4 mr-2 ${sheetLoading ? 'animate-spin' : ''}`} />
+                  {sheetLoading ? 'Sincronizando...' : 'Sincronizar'}
                 </Button>
               </div>
-              {searchTerm && (
-                <div className="text-sm text-muted-foreground">
-                  Mostrando {filteredProfiles.length} de {profiles.length} respondentes
-                </div>
-              )}
+              <div className="flex items-center justify-between text-sm">
+                {searchTerm && (
+                  <div className="text-muted-foreground">
+                    Mostrando {filteredProfiles.length} de {profiles.length} respondentes
+                  </div>
+                )}
+                {lastUpdate && !searchTerm && (
+                  <div className="text-muted-foreground text-xs">
+                    Última sincronização: {lastUpdate.toLocaleTimeString('pt-BR')}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Lista de Respondentes */}
