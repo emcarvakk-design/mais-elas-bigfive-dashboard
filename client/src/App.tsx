@@ -7,7 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { BigFiveProvider } from "./contexts/BigFiveContext";
 import Dashboard from "./pages/Dashboard";
 import ProfileDetail from "./pages/ProfileDetail";
-import Compare from "./pages/Compare";
+import Compare from './pages/Compare';
+import TestApp from './pages/TestApp';
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"\\"} component={Dashboard} />
       <Route path={"/profile/:id"} component={ProfileDetail} />
       <Route path={"/compare"} component={Compare} />
+      <Route path={"/teste"} component={TestApp} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

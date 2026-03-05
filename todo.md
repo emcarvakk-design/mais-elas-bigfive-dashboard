@@ -9,3 +9,10 @@
 - [x] Adicionar perguntas poderosas do guia ao perfil e ao PDF
 - [x] Adicionar perguntas poderosas do guia ao modal de cada dimensão e ao PDF
 - [x] Migrar armazenamento de perfis do localStorage para banco de dados
+- [x] App do teste: tela de boas-vindas
+- [x] App do teste: tela de identificação (nome + email)
+- [x] App do teste: questionário com 30 perguntas (uma por vez)
+- [x] App do teste: tela de resultado detalhado com subfacetas e insights
+- [x] App do teste: notificação automática para a Erica ao concluir
+- [x] App do teste: integração com banco de dados (salva perfil direto)
+- [x] App do teste: rota tRPC para submissão do teste

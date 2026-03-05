@@ -38,7 +38,9 @@ const DIMENSION_QUESTIONS = {
   emotionalStability: [24, 25, 26, 27, 28, 29],
 };
 
-const REVERSE_QUESTIONS = new Set([2, 4, 8, 10, 14, 16, 19, 21, 23]);
+// Questões reversas: incluem as da Estabilidade Emocional (24, 25, 27, 29)
+// que medem neuroticismo (instabilidade) — precisam ser invertidas para obter estabilidade
+const REVERSE_QUESTIONS = new Set([2, 4, 8, 10, 14, 16, 19, 21, 23, 24, 25, 27, 29]);
 
 function getClassification(score: number): BigFiveDimension['classification'] {
   if (score <= 30) return 'very_low';
