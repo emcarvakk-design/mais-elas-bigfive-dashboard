@@ -48,44 +48,53 @@ function getClassification(score: number): BigFiveDimension['classification'] {
   return 'very_high';
 }
 
+// ─── Descrições alinhadas ao guia da Erica ───────────────────────────────────
+
 function getOpennessDescription(score: number): string {
-  if (score >= 80) return 'Pensamento inovador e criativo.';
-  if (score >= 60) return 'Boa abertura para novas ideias.';
-  if (score >= 40) return 'Equilíbrio entre inovação e estabilidade.';
-  if (score >= 20) return 'Preferência por estabilidade.';
-  return 'Resistência a mudanças.';
+  if (score >= 80) return 'Pensamento inovador e criativo — facilidade para lidar com mudanças e visão sistêmica.';
+  if (score >= 60) return 'Boa abertura para novas ideias e aprendizado contínuo.';
+  if (score >= 40) return 'Equilíbrio entre inovação e estabilidade — adapta-se conforme o contexto.';
+  if (score >= 20) return 'Preferência por estabilidade e rotina — valoriza o que já funciona.';
+  return 'Foco no concreto e no prático — resistência a mudanças abruptas.';
 }
 
 function getConscientiousnessDescription(score: number): string {
-  if (score >= 80) return 'Alta organização e foco.';
-  if (score >= 60) return 'Boa organização.';
-  if (score >= 40) return 'Equilíbrio entre organização e espontaneidade.';
-  if (score >= 20) return 'Maior espontaneidade.';
-  return 'Pode procrastinar.';
+  if (score >= 80) return 'Alta organização, foco e confiabilidade — atenção a detalhes e cumprimento de prazos.';
+  if (score >= 60) return 'Boa organização e comprometimento com metas e responsabilidades.';
+  if (score >= 40) return 'Equilíbrio entre organização e espontaneidade — adapta planejamento ao contexto.';
+  if (score >= 20) return 'Maior espontaneidade e flexibilidade — pode procrastinar em rotinas rígidas.';
+  return 'Preferência por liberdade e fluxo — dificuldade com estruturas muito rígidas.';
 }
 
 function getExtraversionDescription(score: number): string {
-  if (score >= 80) return 'Energizada pelo contato social.';
-  if (score >= 60) return 'Comunicativa e confortável socialmente.';
-  if (score >= 40) return 'Ambivertida e flexível.';
-  if (score >= 20) return 'Prefere conexões profundas.';
-  return 'Recarrega na solidão.';
+  if (score >= 80) return 'Energizada pelo contato social — comunicativa, assertiva e com presença marcante.';
+  if (score >= 60) return 'Comunicativa e confortável socialmente — boa capacidade de networking.';
+  if (score >= 40) return 'Ambivertida — confortável tanto em ambientes sociais quanto no trabalho focado.';
+  if (score >= 20) return 'Prefere conexões profundas — processa antes de falar, comunicação reflexiva.';
+  return 'Recarrega na solidão — liderança silenciosa, excelente escutadora e analítica.';
 }
 
 function getAgreeablenessDescription(score: number): string {
-  if (score >= 80) return 'Alta empatia e colaboração.';
-  if (score >= 60) return 'Colaborativa e empática.';
-  if (score >= 40) return 'Equilíbrio entre colaboração e assertividade.';
-  if (score >= 20) return 'Direta e objetiva.';
-  return 'Altamente assertiva.';
+  if (score >= 80) return 'Alta empatia e colaboração — constrói vínculos de confiança com facilidade.';
+  if (score >= 60) return 'Colaborativa e empática — valoriza harmonia e trabalho em equipe.';
+  if (score >= 40) return 'Equilíbrio entre colaboração e assertividade — adapta-se ao contexto relacional.';
+  if (score >= 20) return 'Direta e objetiva — menor tolerância a ineficiência, diz não com facilidade.';
+  return 'Altamente assertiva e orientada a resultados — liderança direta e competitiva.';
 }
 
+/**
+ * ATENÇÃO — Estabilidade Emocional (Neuroticismo invertido):
+ * O formulário mede Estabilidade Emocional diretamente.
+ * Pontuação ALTA = maior estabilidade, menor reatividade ao estresse.
+ * Pontuação BAIXA = maior sensibilidade emocional, maior reatividade.
+ * Isso está alinhado ao guia da Erica, que exibe o escore já invertido.
+ */
 function getEmotionalStabilityDescription(score: number): string {
-  if (score >= 80) return 'Estabilidade emocional elevada.';
-  if (score >= 60) return 'Boa resiliência.';
-  if (score >= 40) return 'Equilíbrio emocional moderado.';
-  if (score >= 20) return 'Maior sensibilidade emocional.';
-  return 'Reatividade ao estresse elevada.';
+  if (score >= 80) return 'Estabilidade emocional elevada — resiliente, difícil de desestabilizar sob pressão.';
+  if (score >= 60) return 'Boa resiliência — lida bem com adversidades e mantém clareza em crises.';
+  if (score >= 40) return 'Equilíbrio emocional moderado — experimenta variações de humor conforme o contexto.';
+  if (score >= 20) return 'Maior sensibilidade emocional — tende a se preocupar e reagir intensamente ao estresse.';
+  return 'Alta reatividade emocional — humor variável, mais propensa a burnout em ambientes de pressão.';
 }
 
 export function calculateBigFiveScore(responses: number[]): BigFiveProfile['dimensions'] {
@@ -156,32 +165,49 @@ export function generateCombinationInsights(dimensions: BigFiveProfile['dimensio
   const insights: string[] = [];
   const { openness, conscientiousness, extraversion, agreeableness, emotionalStability } = dimensions;
 
+  // Alta C + Baixa Estabilidade = Perfeccionismo + risco de burnout
   if (conscientiousness.score >= 80 && emotionalStability.score <= 40) {
-    insights.push('⚠️ Perfeccionismo crônico + risco de burnout.');
+    insights.push('⚠️ Perfeccionismo crônico + risco de burnout. Trabalhe autocompaixão e limites saudáveis.');
   }
 
+  // Alta A + Baixa E = Liderança servidora e discreta
   if (agreeableness.score >= 80 && extraversion.score <= 40) {
-    insights.push('🤝 Liderança servidora e discreta.');
+    insights.push('🤝 Liderança servidora e discreta. Pode ser invisível — trabalhe posicionamento e visibilidade.');
   }
 
+  // Alta O + Baixa C = Criativa mas com dificuldade de execução
   if (openness.score >= 80 && conscientiousness.score <= 40) {
-    insights.push('💡 Criativa mas com dificuldade de execução.');
+    insights.push('💡 Criativa mas com dificuldade de execução. Precisa de estrutura e método para transformar ideias em resultados.');
   }
 
+  // Baixa A + Alta E = Liderança assertiva e direta
   if (agreeableness.score <= 40 && extraversion.score >= 80) {
-    insights.push('🎯 Liderança assertiva e direta.');
+    insights.push('🎯 Liderança assertiva e direta. Pode ser percebida como agressiva — trabalhe escuta ativa.');
   }
 
+  // Baixa Estabilidade + Baixa C = Vulnerabilidade emocional + desorganização
   if (emotionalStability.score <= 40 && conscientiousness.score <= 40) {
-    insights.push('🆘 Vulnerabilidade emocional + desorganização.');
+    insights.push('🆘 Vulnerabilidade emocional + desorganização. Ponto crítico de atenção — priorize suporte e estrutura.');
   }
 
+  // Alta E + Alta O = Perfil empreendedor forte
   if (extraversion.score >= 80 && openness.score >= 80) {
-    insights.push('🚀 Perfil empreendedor forte.');
+    insights.push('🚀 Perfil empreendedor forte — inovadora, comunicativa e aberta a riscos.');
   }
 
+  // Alta C + Alta O = Inovadora Confiável
   if (conscientiousness.score >= 80 && openness.score >= 80) {
-    insights.push('✨ Inovadora Confiável.');
+    insights.push('✨ Inovadora Confiável — combina criatividade com execução disciplinada.');
+  }
+
+  // Alta A = risco de síndrome da boa moça
+  if (agreeableness.score >= 80) {
+    insights.push('💛 Alta agradabilidade: atenção à dificuldade em estabelecer limites e dizer não — síndrome da boa moça é um ponto de trabalho importante.');
+  }
+
+  // Alta Estabilidade = ativo de liderança
+  if (emotionalStability.score >= 80) {
+    insights.push('🧘 Estabilidade emocional como ativo de liderança — fortaleza em ambientes voláteis e de alta pressão.');
   }
 
   return insights;
@@ -189,7 +215,6 @@ export function generateCombinationInsights(dimensions: BigFiveProfile['dimensio
 
 export function generateRecommendations(dimensions: BigFiveProfile['dimensions']): string[] {
   const recommendations: string[] = [];
-
   return recommendations;
 }
 

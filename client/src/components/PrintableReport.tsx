@@ -263,23 +263,31 @@ export function PrintableReport({ profile }: PrintableReportProps) {
                 <thead>
                   <tr>
                     <th style={{ width: '22%' }}>Subfaceta</th>
-                    <th style={{ width: '12%' }}>Score</th>
-                    <th style={{ width: '66%' }}>Descrição</th>
+                    <th style={{ width: '16%' }}>Tendência</th>
+                    <th style={{ width: '62%' }}>Descrição e Dica</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {facets.map((facet, idx) => (
-                    <tr key={idx}>
-                      <td style={{ fontWeight: '600' }}>{facet.name}</td>
-                      <td>
-                        <span style={{ fontWeight: '700', color }}>{facet.score}%</span>
-                        <div className="facet-score-bar">
-                          <div className="facet-score-fill" style={{ width: `${facet.score}%`, backgroundColor: color }} />
-                        </div>
-                      </td>
-                      <td>{facet.description}</td>
-                    </tr>
-                  ))}
+                  {facets.map((facet, idx) => {
+                    const tendencyLabel = facet.tendency === 'elevada' ? '↑ Elevada' : facet.tendency === 'moderada' ? '— Moderada' : '↓ Baixa';
+                    const tendencyColor = facet.tendency === 'elevada' ? '#059669' : facet.tendency === 'moderada' ? '#d97706' : '#dc2626';
+                    return (
+                      <tr key={idx}>
+                        <td style={{ fontWeight: '600' }}>{facet.name}</td>
+                        <td>
+                          <span style={{ fontWeight: '700', color: tendencyColor, fontSize: '11px' }}>{tendencyLabel}</span>
+                        </td>
+                        <td>
+                          <div>{facet.description}</div>
+                          {facet.mentorNote && (
+                            <div style={{ marginTop: '3px', fontSize: '10px', color: '#6b7280', fontStyle: 'italic' }}>
+                              Mentoring: {facet.mentorNote}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

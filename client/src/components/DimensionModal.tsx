@@ -1,4 +1,5 @@
 import { BigFiveDimension } from '@/lib/bigfive';
+import { Facet } from '@/lib/facets';
 import {
   Dialog,
   DialogContent,
@@ -7,12 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-
-interface Facet {
-  name: string;
-  description: string;
-  score: number;
-}
+import { Badge } from '@/components/ui/badge';
 
 interface DimensionModalProps {
   dimension: BigFiveDimension | null;
@@ -20,6 +16,12 @@ interface DimensionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const tendencyConfig = {
+  elevada: { label: '↑ Elevada', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  moderada: { label: '— Moderada', color: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  baixa: { label: '↓ Baixa', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+};
 
 export function DimensionModal({
   dimension,
@@ -54,22 +56,27 @@ export function DimensionModal({
 
           {/* Subfacetas */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Subfacetas</h3>
-            <div className="space-y-4">
-              {facets.map((facet, idx) => (
-                <Card key={idx} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-base">{facet.name}</h4>
-                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                        {facet.score}%
-                      </span>
+            <h3 className="text-lg font-semibold mb-1">Subfacetas</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Tendência estimada com base no escore geral da dimensão.
+            </p>
+            <div className="space-y-3">
+              {facets.map((facet, idx) => {
+                const tc = tendencyConfig[facet.tendency] ?? tendencyConfig.moderada;
+                return (
+                  <Card key={idx} className="p-4 hover:shadow-md transition-shadow">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="font-semibold text-base">{facet.name}</h4>
+                        <Badge className={`text-xs border flex-shrink-0 ${tc.color}`} variant="outline">
+                          {tc.label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{facet.description}</p>
                     </div>
-                    <Progress value={facet.score} className="h-2" />
-                    <p className="text-sm text-muted-foreground">{facet.description}</p>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           </div>
 
@@ -87,71 +94,41 @@ export function DimensionModal({
 }
 
 function getInterpretation(dimension: BigFiveDimension): string {
-  const { name, label, score } = dimension;
+  const { label, score } = dimension;
 
-  // Trata por name também, não apenas por label
-  const dimensionName = label || name;
-
-  if (!dimensionName) return 'Dimensão não identificada.';
-
-  if (dimensionName.includes('Abertura') ) {
-    if (score >= 80)
-      return 'Você é altamente criativo e inovador, com grande curiosidade sobre o mundo. Gosta de explorar novas ideias, experiências e perspectivas. Tende a ser imaginativo, artístico e aberto a mudanças. Pode se destacar em campos criativos e de inovação.';
-    if (score >= 60)
-      return 'Você tem uma boa abertura para novas experiências e ideias. Equilibra criatividade com praticidade, apreciando tanto inovação quanto estabilidade.';
-    if (score >= 40)
-      return 'Você mantém um equilíbrio entre abertura para novas experiências e preferência por estabilidade. Aprecia rotinas, mas está aberto a mudanças quando necessário.';
-    if (score >= 20)
-      return 'Você prefere estabilidade e rotinas conhecidas. Tende a ser mais prático e menos interessado em explorar novas ideias ou experiências.';
-    return 'Você prefere fortemente manter as coisas como estão, com resistência a mudanças e preferência clara por rotinas estabelecidas.';
+  if (label.includes('Abertura')) {
+    if (score >= 80) return 'Altamente criativa e inovadora, com grande curiosidade sobre o mundo. Estimule projetos inovadores, novos mercados e criação de conteúdo autoral. Atenção: alta abertura sem conscienciosidade pode gerar dispersão.';
+    if (score >= 60) return 'Boa abertura para novas experiências e aprendizado contínuo. Equilibra criatividade com praticidade.';
+    if (score >= 40) return 'Equilíbrio entre abertura e estabilidade. Aprecia algumas mudanças, mas também valoriza a familiaridade.';
+    return 'Prefere estabilidade e rotinas conhecidas. Valorize sua consistência — ajude a criar sistemas sólidos.';
   }
 
-  if (dimensionName.includes('Conscienciosidade') ) {
-    if (score >= 80)
-      return 'Você é altamente organizado, disciplinado e focado em objetivos. Planeja cuidadosamente, segue cronogramas e é confiável. Tende a ser perfeccionista e muito responsável. Pode se destacar em posições que exigem atenção aos detalhes e execução precisa.';
-    if (score >= 60)
-      return 'Você é bem organizado e responsável. Equilibra planejamento com flexibilidade, mantendo foco nos objetivos.';
-    if (score >= 40)
-      return 'Você mantém um equilíbrio entre organização e espontaneidade. Consegue ser estruturado quando necessário, mas também aprecia flexibilidade.';
-    if (score >= 20)
-      return 'Você prefere espontaneidade e flexibilidade. Pode procrastinar ocasionalmente, mas é criativo e adaptável.';
-    return 'Você é muito espontâneo e pode procrastinar. Prefere liberdade a estrutura rígida, podendo ser desorganizado.';
+  if (label.includes('Conscienciosidade')) {
+    if (score >= 80) return 'Altamente organizada, disciplinada e focada em objetivos. Pode tender ao perfeccionismo e burnout — trabalhe os limites saudáveis.';
+    if (score >= 60) return 'Bem organizada e responsável. Equilibra planejamento com flexibilidade.';
+    if (score >= 40) return 'Nível moderado de organização. Implemente ferramentas simples: listas, rotinas mínimas e ancoragens.';
+    return 'Prefere espontaneidade e flexibilidade. Foque em sistemas mínimos viáveis e celebre pequenas consistências.';
   }
 
-  if (dimensionName.includes('Extroversão') ) {
-    if (score >= 80)
-      return 'Você é altamente extrovertido, energizado pelo contato social e interação com outras pessoas. Gosta de estar no centro das atenções, é comunicativo e entusiasmado. Tende a buscar estímulos externos e aprecia ambientes sociais.';
-    if (score >= 60)
-      return 'Você é comunicativo e confortável socialmente. Gosta de interagir com pessoas e tem boa capacidade de se expressar.';
-    if (score >= 40)
-      return 'Você é ambivertido, confortável tanto em situações sociais quanto em momentos de solidão. Adapta-se bem a diferentes contextos.';
-    if (score >= 20)
-      return 'Você é mais introvertido, preferindo conexões profundas com poucas pessoas. Recarrega sua energia na solidão.';
-    return 'Você é altamente introvertido, recarregando-se na solidão. Prefere profundidade nas relações a ampla rede social.';
+  if (label.includes('Extroversão')) {
+    if (score >= 80) return 'Energizada pelo contato social. Explore seu potencial de comunicação, liderança de equipes e presença de marca.';
+    if (score >= 60) return 'Comunicativa e confortável socialmente. Boa capacidade de networking e expressão.';
+    if (score >= 40) return 'Ambivertida — confortável tanto em ambientes sociais quanto no trabalho focado.';
+    return 'Introvertida — recarrega na solidão. Liderança silenciosa é igualmente poderosa. Crie estratégias de gestão de energia.';
   }
 
-  if (dimensionName.includes('Agradabilidade') ) {
-    if (score >= 80)
-      return 'Você é altamente empático, colaborativo e compassivo. Prioriza as necessidades dos outros e busca harmonia. É confiável, generoso e tende a ser bem-vindo em grupos. Pode se destacar em funções que exigem empatia e trabalho em equipe.';
-    if (score >= 60)
-      return 'Você é colaborativo e empático. Valoriza as relações e busca harmonia nos relacionamentos.';
-    if (score >= 40)
-      return 'Você equilibra colaboração com assertividade. Consegue ser empático, mas também defende seus pontos de vista.';
-    if (score >= 20)
-      return 'Você é direto e objetivo. Valoriza a verdade mais que a harmonia, podendo ser percebido como crítico.';
-    return 'Você é altamente assertivo e direto. Prioriza objetivos sobre harmonia, podendo parecer insensível aos sentimentos alheios.';
+  if (label.includes('Agradabilidade')) {
+    if (score >= 80) return 'Alta empatia e colaboração. Risco de dificuldade em estabelecer limites e dizer não — trabalhe assertividade. Síndrome da boa moça é um ponto de trabalho importante.';
+    if (score >= 60) return 'Colaborativa e empática. Valoriza as relações e busca harmonia.';
+    if (score >= 40) return 'Equilíbrio entre empatia e assertividade. Consegue colaborar bem e também manter seus próprios interesses.';
+    return 'Direta e orientada a resultados. Explore a liderança por resultados, mas atenção à gestão de relacionamentos.';
   }
 
-  if (dimensionName.includes('Estabilidade') || dimensionName.includes('Emotional')) {
-    if (score >= 80)
-      return 'Você tem excelente estabilidade emocional e resiliência. Lida bem com estresse, mantém calma em situações difíceis e tem perspectiva equilibrada. Raramente se sente ansioso ou deprimido.';
-    if (score >= 60)
-      return 'Você tem boa resiliência emocional. Lida bem com estresse e mantém equilíbrio em situações desafiadoras.';
-    if (score >= 40)
-      return 'Você tem equilíbrio emocional moderado. Experimenta emoções variadas, mas consegue lidar com elas de forma saudável.';
-    if (score >= 20)
-      return 'Você é mais sensível emocionalmente. Pode se sentir ansioso ou deprimido com mais frequência, mas consegue se recuperar.';
-    return 'Você é altamente reativo ao estresse. Tende a experimentar ansiedade, preocupação e instabilidade emocional com frequência.';
+  if (label.includes('Estabilidade')) {
+    if (score >= 80) return 'Estabilidade emocional elevada — use essa fortaleza como ativo de liderança em ambientes voláteis.';
+    if (score >= 60) return 'Boa resiliência emocional. Lida bem com adversidades e mantém equilíbrio.';
+    if (score >= 40) return 'Equilíbrio emocional moderado. Desenvolva práticas de regulação emocional e autoconhecimento dos gatilhos.';
+    return 'Maior sensibilidade emocional — explore práticas de regulação e prevenção ao burnout. Alta sensibilidade não é fraqueza.';
   }
 
   return 'Dimensão não identificada.';
