@@ -4,32 +4,60 @@ import { FileUpload } from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Users, BarChart3, Trash2, RefreshCw, Cloud, AlertCircle, Bell } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Users, BarChart3, Trash2, Cloud, AlertCircle, Bell, GitCompare, SlidersHorizontal, X, RefreshCw, Download } from 'lucide-react';
+import { useBatchExport } from '@/hooks/useBatchExport';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { useGoogleSheets } from '@/hooks/useGoogleSheets';
 import { trpc } from '@/lib/trpc';
 import { BigFiveProfile } from '@/lib/bigfive';
 
+const DIMENSION_OPTIONS = [
+  { key: 'openness', label: 'Abertura', emoji: '🌿' },
+  { key: 'conscientiousness', label: 'Conscienciosidade', emoji: '⚡' },
+  { key: 'extraversion', label: 'Extroversão', emoji: '☀️' },
+  { key: 'agreeableness', label: 'Agradabilidade', emoji: '💚' },
+  { key: 'emotionalStability', label: 'Est. Emocional', emoji: '🌊' },
+] as const;
+
+type DimKey = typeof DIMENSION_OPTIONS[number]['key'];
+
+const CLASSIFICATION_OPTIONS = [
+  { value: '', label: 'Qualquer nível' },
+  { value: 'very_high', label: 'Muito Elevado (>89%)' },
+  { value: 'high', label: 'Elevado (70–89%)' },
+  { value: 'moderate', label: 'Moderado (40–69%)' },
+  { value: 'low', label: 'Baixo (20–39%)' },
+  { value: 'very_low', label: 'Muito Baixo (<20%)' },
+];
+
 export default function Dashboard() {
   const { profiles, clearData, setSelectedProfile, addProfiles } = useBigFive();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDimension, setFilterDimension] = useState<DimKey | ''>('');
+  const [filterClassification, setFilterClassification] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const { fetchSheetData, loading: sheetLoading, lastUpdate } = useGoogleSheets();
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
   const knownProfileIds = useRef<Set<string>>(new Set());
   const notifyNewResponse = trpc.notifications.newResponse.useMutation();
 
+  const hasActiveFilters = filterDimension !== '' || filterClassification !== '';
+  const { exportAllPDFs, isExporting, progress } = useBatchExport();
+
+  const clearFilters = () => {
+    setFilterDimension('');
+    setFilterClassification('');
+  };
+
   // Detectar novos respondentes e notificar
   const detectAndNotifyNewProfiles = (newProfiles: BigFiveProfile[]) => {
     const isFirstLoad = knownProfileIds.current.size === 0;
     const newOnes = newProfiles.filter(p => !knownProfileIds.current.has(p.id));
-    
-    // Atualizar IDs conhecidos
     newProfiles.forEach(p => knownProfileIds.current.add(p.id));
-    
-    // Só notifica se não for o primeiro carregamento (evita spam na inicialização)
     if (!isFirstLoad && newOnes.length > 0) {
       newOnes.forEach(p => {
         notifyNewResponse.mutate({
@@ -51,38 +79,30 @@ export default function Dashboard() {
         </div>
       );
     }
-    
     return newOnes;
   };
 
-  // Buscar dados do Google Sheets ao carregar a página
   useEffect(() => {
     const loadDataFromSheet = async () => {
       if (!autoSyncEnabled) return;
-      
       try {
         setSyncError(null);
         const data = await fetchSheetData();
         if (data.length > 0) {
           addProfiles(data);
-          // Registrar IDs no primeiro carregamento (sem notificar)
           data.forEach(p => knownProfileIds.current.add(p.id));
           toast.success(`${data.length} perfil(is) sincronizado(s) do Google Sheets!`);
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
         setSyncError(errorMsg);
-        console.error('Erro ao buscar Google Sheets:', error);
       }
     };
-
     loadDataFromSheet();
   }, []);
 
-  // Sincronizar a cada 5 minutos e detectar novas respostas
   useEffect(() => {
     if (!autoSyncEnabled) return;
-
     const interval = setInterval(async () => {
       try {
         setSyncError(null);
@@ -94,10 +114,8 @@ export default function Dashboard() {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
         setSyncError(errorMsg);
-        console.error('Erro ao sincronizar Google Sheets:', error);
       }
-    }, 5 * 60 * 1000); // 5 minutos
-
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [autoSyncEnabled]);
 
@@ -124,11 +142,25 @@ export default function Dashboard() {
     }
   };
 
-  const filteredProfiles = profiles.filter(
-    (p) =>
+  const filteredProfiles = profiles.filter((p) => {
+    const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      p.email.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (filterDimension && filterClassification) {
+      return p.dimensions[filterDimension].classification === filterClassification;
+    }
+    if (filterDimension && !filterClassification) {
+      const scores = Object.entries(p.dimensions) as [DimKey, typeof p.dimensions.openness][];
+      const dominant = scores.reduce((a, b) => (a[1].score > b[1].score ? a : b));
+      return dominant[0] === filterDimension;
+    }
+    if (!filterDimension && filterClassification) {
+      return Object.values(p.dimensions).some(d => d.classification === filterClassification);
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,7 +173,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Mensagem de Erro de Sincronização */}
+        {/* Erro de Sincronização */}
         {syncError && (
           <Card className="p-4 mb-6 border-destructive/50 bg-destructive/10">
             <div className="flex items-start gap-3">
@@ -156,7 +188,6 @@ export default function Dashboard() {
 
         {profiles.length === 0 ? (
           <div className="max-w-2xl mx-auto space-y-6">
-            {/* Card de Sincronização Automática */}
             <Card className="p-6 border-primary/20 bg-primary/5">
               <div className="flex items-start gap-4">
                 <Cloud className="w-6 h-6 text-primary mt-1" />
@@ -166,19 +197,11 @@ export default function Dashboard() {
                     O dashboard está conectado ao seu Google Forms e buscará as respostas automaticamente a cada 5 minutos.
                   </p>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={handleManualSync}
-                      disabled={sheetLoading}
-                    >
+                    <Button size="sm" onClick={handleManualSync} disabled={sheetLoading}>
                       <RefreshCw className={`w-4 h-4 mr-2 ${sheetLoading ? 'animate-spin' : ''}`} />
                       {sheetLoading ? 'Sincronizando...' : 'Sincronizar Agora'}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}>
                       {autoSyncEnabled ? 'Desativar Auto-Sync' : 'Ativar Auto-Sync'}
                     </Button>
                   </div>
@@ -190,7 +213,6 @@ export default function Dashboard() {
                 </div>
               </div>
             </Card>
-
             <FileUpload />
           </div>
         ) : (
@@ -215,51 +237,152 @@ export default function Dashboard() {
                   </div>
                 </div>
               </Card>
-              <Card className="p-6">
+              <Card className="p-6 flex flex-col gap-2">
+                <Button variant="outline" size="sm" onClick={() => setLocation('/compare')} className="w-full">
+                  <GitCompare className="w-4 h-4 mr-2" />
+                  Comparar Perfis
+                </Button>
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
-                  onClick={clearData}
+                  onClick={() => exportAllPDFs(filteredProfiles)}
+                  disabled={isExporting || filteredProfiles.length === 0}
                   className="w-full"
                 >
+                  <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-bounce' : ''}`} />
+                  {isExporting ? `Exportando... ${progress}%` : `Exportar ${filteredProfiles.length} PDF(s)`}
+                </Button>
+                <Button variant="destructive" size="sm" onClick={clearData} className="w-full">
                   <Trash2 className="w-4 h-4 mr-2" />
                   Limpar Dados
                 </Button>
               </Card>
             </div>
 
-            {/* Controles */}
-            <div className="space-y-4">
-              <div className="flex gap-4 items-end">
+            {/* Controles de Busca e Filtros */}
+            <div className="space-y-3">
+              <div className="flex gap-3 items-end">
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">Buscar Respondente</label>
                   <Input
                     placeholder="Digite o nome ou email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full"
                   />
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleManualSync}
-                  disabled={sheetLoading}
+                <Button
+                  variant={showFilters ? 'default' : 'outline'}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="relative"
                 >
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  Filtros
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
+                  )}
+                </Button>
+                <Button variant="outline" onClick={handleManualSync} disabled={sheetLoading}>
                   <Cloud className={`w-4 h-4 mr-2 ${sheetLoading ? 'animate-spin' : ''}`} />
                   {sheetLoading ? 'Sincronizando...' : 'Sincronizar'}
                 </Button>
               </div>
+
+              {/* Painel de Filtros Avançados */}
+              {showFilters && (
+                <Card className="p-4 border-primary/20 bg-primary/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4" />
+                      Filtros Avançados
+                    </h3>
+                    {hasActiveFilters && (
+                      <Button size="sm" variant="ghost" onClick={clearFilters} className="h-7 text-xs">
+                        <X className="w-3 h-3 mr-1" />
+                        Limpar filtros
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Filtro por Dimensão */}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                        Dimensão Dominante / Filtrar por
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {DIMENSION_OPTIONS.map(({ key, label, emoji }) => (
+                          <button
+                            key={key}
+                            onClick={() => setFilterDimension(filterDimension === key ? '' : key)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              filterDimension === key
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <span>{emoji}</span>
+                            <span>{label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Filtro por Nível */}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                        Nível de Classificação
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {CLASSIFICATION_OPTIONS.filter(o => o.value !== '').map(({ value, label }) => (
+                          <button
+                            key={value}
+                            onClick={() => setFilterClassification(filterClassification === value ? '' : value)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              filterClassification === value
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background border-border hover:border-primary/50'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Status dos filtros */}
               <div className="flex items-center justify-between text-sm">
-                {searchTerm && (
-                  <div className="text-muted-foreground">
-                    Mostrando {filteredProfiles.length} de {profiles.length} respondentes
-                  </div>
-                )}
-                {lastUpdate && !searchTerm && (
-                  <div className="text-muted-foreground text-xs">
-                    Última sincronização: {lastUpdate.toLocaleTimeString('pt-BR')}
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {hasActiveFilters && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {filterDimension && (
+                        <Badge variant="secondary" className="gap-1">
+                          {DIMENSION_OPTIONS.find(d => d.key === filterDimension)?.emoji}
+                          {DIMENSION_OPTIONS.find(d => d.key === filterDimension)?.label}
+                          <button onClick={() => setFilterDimension('')} className="ml-1 hover:text-destructive">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      )}
+                      {filterClassification && (
+                        <Badge variant="secondary" className="gap-1">
+                          {CLASSIFICATION_OPTIONS.find(c => c.value === filterClassification)?.label}
+                          <button onClick={() => setFilterClassification('')} className="ml-1 hover:text-destructive">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="text-muted-foreground text-xs">
+                  {filteredProfiles.length !== profiles.length
+                    ? `${filteredProfiles.length} de ${profiles.length} respondentes`
+                    : lastUpdate
+                    ? `Última sync: ${lastUpdate.toLocaleTimeString('pt-BR')}`
+                    : ''}
+                </div>
               </div>
             </div>
 
@@ -273,7 +396,12 @@ export default function Dashboard() {
               </div>
               {filteredProfiles.length === 0 ? (
                 <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">Nenhum respondente encontrado</p>
+                  <p className="text-muted-foreground">Nenhum respondente encontrado com os filtros aplicados</p>
+                  {hasActiveFilters && (
+                    <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3">
+                      Limpar filtros
+                    </Button>
+                  )}
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -288,26 +416,12 @@ export default function Dashboard() {
                         <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
                       </div>
                       <div className="grid grid-cols-5 gap-2 text-center text-xs mt-3">
-                        <div>
-                          <div className="text-lg">{profile.dimensions.openness.emoji}</div>
-                          <div className="font-bold text-primary text-sm">{profile.dimensions.openness.score}%</div>
-                        </div>
-                        <div>
-                          <div className="text-lg">{profile.dimensions.conscientiousness.emoji}</div>
-                          <div className="font-bold text-primary text-sm">{profile.dimensions.conscientiousness.score}%</div>
-                        </div>
-                        <div>
-                          <div className="text-lg">{profile.dimensions.extraversion.emoji}</div>
-                          <div className="font-bold text-primary text-sm">{profile.dimensions.extraversion.score}%</div>
-                        </div>
-                        <div>
-                          <div className="text-lg">{profile.dimensions.agreeableness.emoji}</div>
-                          <div className="font-bold text-primary text-sm">{profile.dimensions.agreeableness.score}%</div>
-                        </div>
-                        <div>
-                          <div className="text-lg">{profile.dimensions.emotionalStability.emoji}</div>
-                          <div className="font-bold text-primary text-sm">{profile.dimensions.emotionalStability.score}%</div>
-                        </div>
+                        {(['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'emotionalStability'] as const).map(dim => (
+                          <div key={dim}>
+                            <div className="text-lg">{profile.dimensions[dim].emoji}</div>
+                            <div className="font-bold text-primary text-sm">{Math.round(profile.dimensions[dim].score)}%</div>
+                          </div>
+                        ))}
                       </div>
                     </Card>
                   ))}
