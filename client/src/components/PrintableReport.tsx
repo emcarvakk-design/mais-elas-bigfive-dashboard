@@ -1,6 +1,7 @@
 import { BigFiveProfile } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
 import { generateProfessionalInsights } from '@/lib/professionalInsights';
+import { POWERFUL_QUESTIONS } from '@/lib/powerfulQuestions';
 
 interface PrintableReportProps {
   profile: BigFiveProfile;
@@ -167,6 +168,62 @@ export function PrintableReport({ profile }: PrintableReportProps) {
             margin-bottom: 8px;
             border-radius: 0 6px 6px 0;
             page-break-inside: avoid;
+          }
+
+          /* ── Perguntas Poderosas ── */
+          .pq-section {
+            margin-bottom: 18px;
+            page-break-inside: avoid;
+          }
+          .pq-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px 6px 0 0;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+          }
+          .pq-body {
+            border: 1px solid #e9d5ff;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            padding: 10px 12px;
+            background: #faf5ff;
+          }
+          .pq-intro {
+            font-size: 9px;
+            color: #7c3aed;
+            font-style: italic;
+            margin-bottom: 8px;
+            line-height: 1.4;
+          }
+          .pq-list { list-style: none; padding: 0; margin: 0; }
+          .pq-item {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin-bottom: 6px;
+          }
+          .pq-num {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #7c3aed;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .pq-text {
+            font-size: 10px;
+            color: #4c1d95;
+            font-style: italic;
+            line-height: 1.5;
           }
 
           /* ── Rodapé ── */
@@ -354,7 +411,51 @@ export function PrintableReport({ profile }: PrintableReportProps) {
 
         <div className="report-footer" style={{ marginTop: '30px' }}>
           Este relatório é confidencial e destinado exclusivamente ao respondente e profissionais autorizados.
-          Gerado pelo Big Five Dashboard — Página 4 de 4
+          Gerado pelo Big Five Dashboard — Página 4 de 5
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════
+          PÁGINA 5 — Perguntas Poderosas para Sessão
+      ════════════════════════════════════════════ */}
+      <div className="print-page">
+        <div className="report-header" style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)' }}>
+          <h1>Perguntas Poderosas para a Sessão</h1>
+          <p className="subtitle">{profile.name} — Roteiro reflexivo por dimensão</p>
+          <p className="meta">Use estas perguntas como ponto de partida para aprofundar o autoconhecimento durante a mentoria.</p>
+        </div>
+
+        {Object.entries(POWERFUL_QUESTIONS).map(([key, pq]) => {
+          const dimension = dimensions[key as keyof typeof dimensions];
+          const color = DIMENSION_COLORS[key] || '#7c3aed';
+          return (
+            <div key={key} className="pq-section">
+              <div className="pq-header" style={{ background: color }}>
+                {pq.emoji} {pq.label}
+                {dimension && (
+                  <span style={{ marginLeft: 'auto', fontSize: '11px', opacity: 0.9 }}>
+                    {Math.round(dimension.score)}% — {CLASSIFICATION_LABELS[dimension.classification]}
+                  </span>
+                )}
+              </div>
+              <div className="pq-body">
+                <p className="pq-intro">{pq.intro}</p>
+                <ul className="pq-list">
+                  {pq.questions.map((q, idx) => (
+                    <li key={idx} className="pq-item">
+                      <span className="pq-num">{idx + 1}</span>
+                      <p className="pq-text">“{q.question}”</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="report-footer" style={{ marginTop: '20px' }}>
+          Este relatório é confidencial e destinado exclusivamente ao respondente e profissionais autorizados.
+          Gerado pelo Big Five Dashboard — Página 5 de 5
         </div>
       </div>
     </div>

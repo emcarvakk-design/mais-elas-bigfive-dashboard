@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { Facet, FacetTendency } from '@/lib/facets';
+import { getQuestionsForDimension } from '@/lib/powerfulQuestions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, Info } from 'lucide-react';
+import { ChevronDown, Info, MessageCircleQuestion } from 'lucide-react';
 
 interface DimensionModalExpandableProps {
   dimension: BigFiveDimension;
+  dimensionKey: string;
   facets: Facet[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,6 +39,7 @@ const tendencyConfig: Record<FacetTendency, { label: string; color: string; dot:
 
 export function DimensionModalExpandable({
   dimension,
+  dimensionKey,
   facets,
   open,
   onOpenChange,
@@ -45,6 +48,7 @@ export function DimensionModalExpandable({
 
   const classLabel = classificationLabels[dimension.classification] ?? dimension.classification;
   const classColor = classificationColors[dimension.classification] ?? '';
+  const powerfulQs = getQuestionsForDimension(dimensionKey);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,6 +162,27 @@ export function DimensionModalExpandable({
               {getInterpretation(dimension)}
             </p>
           </Card>
+
+          {/* Perguntas Poderosas */}
+          {powerfulQs && (
+            <Card className="p-4 border-purple-200 bg-purple-50/50">
+              <div className="flex items-center gap-2 mb-3">
+                <MessageCircleQuestion className="w-4 h-4 text-purple-600" />
+                <h4 className="font-semibold text-sm text-purple-800">Perguntas Poderosas para a Sessão</h4>
+              </div>
+              <p className="text-xs text-purple-600 mb-3 leading-relaxed">{powerfulQs.intro}</p>
+              <ol className="space-y-2">
+                {powerfulQs.questions.map((q, idx) => (
+                  <li key={idx} className="flex gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-200 text-purple-700 text-xs font-bold flex items-center justify-center mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <p className="text-sm text-purple-900 leading-relaxed italic">"{q.question}"</p>
+                  </li>
+                ))}
+              </ol>
+            </Card>
+          )}
         </div>
       </DialogContent>
     </Dialog>

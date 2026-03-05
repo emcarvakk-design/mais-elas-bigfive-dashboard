@@ -6,4 +6,5 @@
 - [x] Adicionar pirâmide dos Níveis Neurológicos de Dilts no dashboard principal
 - [x] Corrigir inversão da escala de Estabilidade Emocional (bug crítico)
 - [x] Corrigir subfacetas fictícias — remover escores numéricos artificiais
-- [ ] Adicionar perguntas poderosas do guia ao perfil e ao PDF
+- [x] Adicionar perguntas poderosas do guia ao perfil e ao PDF
+- [x] Adicionar perguntas poderosas do guia ao modal de cada dimensão e ao PDF

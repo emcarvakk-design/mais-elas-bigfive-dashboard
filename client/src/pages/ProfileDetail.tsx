@@ -220,17 +220,18 @@ export default function ProfileDetail() {
       </div>
 
       {/* Modal de Detalhes da Dimensão */}
-      {selectedDimension && (
-        <DimensionModalExpandable
-          dimension={selectedDimension}
-          facets={getFacetsByDimension(
-            Object.entries(dimensions).find(([_, d]) => d === selectedDimension)?.[0] || '',
-            selectedDimension.score
-          )}
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-        />
-      )}
+      {selectedDimension && (() => {
+        const dimKey = Object.entries(dimensions).find(([_, d]) => d === selectedDimension)?.[0] || '';
+        return (
+          <DimensionModalExpandable
+            dimension={selectedDimension}
+            dimensionKey={dimKey}
+            facets={getFacetsByDimension(dimKey, selectedDimension.score)}
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+          />
+        );
+      })()}
 
       {/* Relatório Imprimível */}
       <PrintableReport profile={profile} />
