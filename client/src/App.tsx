@@ -8,8 +8,8 @@ import { BigFiveProvider } from "./contexts/BigFiveContext";
 import Dashboard from "./pages/Dashboard";
 import ProfileDetail from "./pages/ProfileDetail";
 
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"\\"} component={Dashboard} />

@@ -1,36 +1,28 @@
 import { useState, useCallback } from 'react';
-import { BigFiveProfile } from '@/lib/bigfive';
+import { trpc } from '@/lib/trpc';
 import { parseCSVData } from '@/hooks/useFileUpload';
-import { toast } from 'sonner';
-
-// ID da planilha Google Sheets
-const SHEET_ID = '1gStVG2NRfrQe7E2fGMU1RC2xwRd2ZGcX50oJHLeG-3U';
-const SHEET_GID = '724087005'; // ID da aba "Respostas"
 
 export function useGoogleSheets() {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  const fetchSheetData = useCallback(async (): Promise<BigFiveProfile[]> => {
+  // Usar o utilitário tRPC para chamar a rota backend
+  const utils = trpc.useUtils();
+
+  const fetchSheetData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // URL para exportar a planilha como CSV
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+      // Chamar o backend proxy (evita CORS)
+      const result = await utils.sheets.fetchResponses.fetch();
 
-      const response = await fetch(csvUrl);
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar dados: ${response.statusText}`);
+      if (!result?.csv) {
+        throw new Error('Nenhum dado retornado da planilha');
       }
 
-      const csvText = await response.text();
-      if (!csvText.trim()) {
-        throw new Error('Planilha vazia ou inacessível');
-      }
+      // Parsear o CSV retornado pelo backend
+      const profiles = parseCSVData(result.csv);
 
-      // Parsear o CSV
-      const profiles = parseCSVData(csvText);
-      
       if (profiles.length === 0) {
         throw new Error('Nenhuma resposta válida encontrada na planilha');
       }
@@ -44,7 +36,7 @@ export function useGoogleSheets() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [utils]);
 
   return {
     fetchSheetData,
