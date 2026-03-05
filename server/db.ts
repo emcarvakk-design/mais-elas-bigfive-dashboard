@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, InsertBigfiveProfile, bigfiveProfiles, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,66 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ─── Big Five Profiles ───────────────────────────────────────────────────────
+
+/**
+ * Upsert um perfil Big Five.
+ * Usa o email como chave de deduplicação: se já existir um perfil com o mesmo
+ * email, atualiza todos os campos (resposta mais recente prevalece).
+ */
+export async function upsertBigfiveProfile(profile: InsertBigfiveProfile): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot upsert bigfive profile: database not available");
+    return;
+  }
+  try {
+    await db.insert(bigfiveProfiles).values(profile).onDuplicateKeyUpdate({
+      set: {
+        name: profile.name,
+        email: profile.email,
+        responseTimestamp: profile.responseTimestamp,
+        rawResponses: profile.rawResponses,
+        dimensions: profile.dimensions,
+        combinationInsights: profile.combinationInsights,
+        recommendations: profile.recommendations,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("[Database] Failed to upsert bigfive profile:", error);
+    throw error;
+  }
+}
+
+/** Busca todos os perfis, ordenados do mais recente para o mais antigo. */
+export async function getAllBigfiveProfiles() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get bigfive profiles: database not available");
+    return [];
+  }
+  return db.select().from(bigfiveProfiles).orderBy(bigfiveProfiles.createdAt);
+}
+
+/** Busca um perfil pelo ID. */
+export async function getBigfiveProfileById(id: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(bigfiveProfiles).where(eq(bigfiveProfiles.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/** Remove um perfil pelo ID. */
+export async function deleteBigfiveProfile(id: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(bigfiveProfiles).where(eq(bigfiveProfiles.id, id));
+}
+
+/** Remove todos os perfis. */
+export async function deleteAllBigfiveProfiles() {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(bigfiveProfiles);
+}

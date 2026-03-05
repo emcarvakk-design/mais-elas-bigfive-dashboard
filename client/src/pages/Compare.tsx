@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useBigFive } from '@/contexts/BigFiveContext';
+import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -117,7 +117,8 @@ function ComparisonRadar({ profiles }: ComparisonRadarProps) {
 }
 
 export default function Compare() {
-  const { profiles } = useBigFive();
+  const { data: dbProfiles = [] } = trpc.profiles.list.useQuery();
+  const profiles = dbProfiles as unknown as BigFiveProfile[];
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 

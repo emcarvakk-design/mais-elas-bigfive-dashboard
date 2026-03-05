@@ -1,6 +1,21 @@
 import { BigFiveResponse, createProfile } from '@/lib/bigfive';
-import { nanoid } from 'nanoid';
 import * as XLSX from 'xlsx';
+
+/** Gera um ID estável e único baseado no email do respondente.
+ * Isso garante que o upsert no banco funcione corretamente:
+ * a mesma pessoa sempre terá o mesmo ID, independente de quantas
+ * vezes a planilha for sincronizada. */
+function emailToId(email: string): string {
+  // Simples hash determinístico: base64url do email normalizado
+  const normalized = email.trim().toLowerCase();
+  // Usar btoa com prefixo para garantir compatibilidade
+  try {
+    return 'bf_' + btoa(normalized).replace(/[+/=]/g, c => ({ '+': '-', '/': '_', '=': '' }[c] ?? c));
+  } catch {
+    // Fallback: remover caracteres especiais
+    return 'bf_' + normalized.replace(/[^a-z0-9]/g, '_').slice(0, 40);
+  }
+}
 
 // Parsear CSV - lida com aspas e vírgulas dentro de campos
 export function parseCSVLine(line: string): string[] {
@@ -121,7 +136,10 @@ export function parseCSVData(csvText: string): any[] {
         responses: responseValues,
       };
 
-      const profile = createProfile(bigFiveResponse, nanoid());
+      const stableId = emailToId(bigFiveResponse.email);
+      const profile = createProfile(bigFiveResponse, stableId);
+      // Preservar rawResponses para salvar no banco
+      (profile as any).rawResponses = responseValues;
       responses.push(profile);
     } catch (error) {
       console.warn(`Erro ao processar linha ${i + 2}:`, error);
@@ -252,7 +270,9 @@ export function useFileUpload() {
           responses: responseValues,
         };
 
-        const profile = createProfile(bigFiveResponse, nanoid());
+        const stableId = emailToId(bigFiveResponse.email);
+        const profile = createProfile(bigFiveResponse, stableId);
+        (profile as any).rawResponses = responseValues;
         responses.push(profile);
       } catch (error) {
         console.warn(`Erro ao processar linha ${i + 2}:`, error);

@@ -8,3 +8,4 @@
 - [x] Corrigir subfacetas fictícias — remover escores numéricos artificiais
 - [x] Adicionar perguntas poderosas do guia ao perfil e ao PDF
 - [x] Adicionar perguntas poderosas do guia ao modal de cada dimensão e ao PDF
+- [x] Migrar armazenamento de perfis do localStorage para banco de dados

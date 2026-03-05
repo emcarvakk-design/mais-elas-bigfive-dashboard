@@ -1,29 +1,40 @@
 import { useState } from 'react';
-import { useBigFive } from '@/contexts/BigFiveContext';
 import { DimensionCardClickable } from '@/components/DimensionCardClickable';
 import { DimensionModalExpandable } from '@/components/DimensionModalExpandable';
 import { PrintableReport } from '@/components/PrintableReport';
 import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
 import { generateProfessionalInsights } from '@/lib/professionalInsights';
+import { trpc } from '@/lib/trpc';
 
 export default function ProfileDetail() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/profile/:id');
-  const { profiles } = useBigFive();
   const [selectedDimension, setSelectedDimension] = useState<BigFiveDimension | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Buscar todos os perfis do banco e encontrar o atual pelo ID
+  const { data: dbProfiles = [], isLoading } = trpc.profiles.list.useQuery();
 
   if (!match) {
     return null;
   }
 
-  const profile = profiles.find((p) => p.id === params?.id);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-3 text-muted-foreground">Carregando perfil...</span>
+      </div>
+    );
+  }
+
+  const profile = (dbProfiles as any[]).find((p: any) => p.id === params?.id) as any;
 
   if (!profile) {
     return (
@@ -90,7 +101,7 @@ export default function ProfileDetail() {
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">Resumo dos Escores</h2>
             <div className="space-y-3">
-              {Object.entries(dimensions).map(([key, dim]) => {
+              {Object.entries(dimensions as Record<string, any>).map(([key, dim]: [string, any]) => {
                 const classificationLabel: Record<string, string> = {
                   very_low: 'Muito Baixo',
                   low: 'Baixo',
@@ -192,7 +203,7 @@ export default function ProfileDetail() {
               Combinações de Traços Importantes
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {combinationInsights.map((insight, idx) => (
+              {(combinationInsights as string[]).map((insight: string, idx: number) => (
                 <Card key={idx} className="p-4 border-l-4 border-primary">
                   <p className="text-sm">{insight}</p>
                 </Card>
@@ -209,7 +220,7 @@ export default function ProfileDetail() {
               Recomendações de Desenvolvimento
             </h2>
             <div className="space-y-3">
-              {recommendations.map((rec, idx) => (
+              {(recommendations as string[]).map((rec: string, idx: number) => (
                 <Card key={idx} className="p-4 bg-muted/50">
                   <p className="text-sm">{rec}</p>
                 </Card>

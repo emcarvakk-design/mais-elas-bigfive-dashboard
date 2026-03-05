@@ -3,14 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { useBigFive } from '@/contexts/BigFiveContext';
+import { BigFiveProfile } from '@/lib/bigfive';
 import { toast } from 'sonner';
 
-export function FileUpload() {
+interface FileUploadProps {
+  /** Callback chamado com os perfis parseados — use para salvar no banco */
+  onImport?: (profiles: BigFiveProfile[]) => void | Promise<void>;
+}
+
+export function FileUpload({ onImport }: FileUploadProps) {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { processFile } = useFileUpload();
-  const { addProfiles } = useBigFive();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -24,9 +28,12 @@ export function FileUpload() {
         return;
       }
 
-      addProfiles(profiles);
-      toast.success(`${profiles.length} perfil(is) carregado(s) com sucesso!`);
-      
+      if (onImport) {
+        await onImport(profiles);
+      } else {
+        toast.success(`${profiles.length} perfil(is) carregado(s) com sucesso!`);
+      }
+
       // Reset input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

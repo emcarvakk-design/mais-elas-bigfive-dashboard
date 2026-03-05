@@ -4,9 +4,43 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { notifyOwner } from "./_core/notification";
 import { z } from "zod";
+import {
+  upsertBigfiveProfile,
+  getAllBigfiveProfiles,
+  deleteBigfiveProfile,
+  deleteAllBigfiveProfiles,
+} from "./db";
+
+// ─── Zod schema para uma dimensão Big Five ───────────────────────────────────
+const dimensionSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  emoji: z.string(),
+  score: z.number(),
+  classification: z.enum(['very_low', 'low', 'moderate', 'high', 'very_high']),
+  description: z.string(),
+});
+
+// ─── Zod schema para o perfil completo ───────────────────────────────────────
+const profileInputSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  timestamp: z.string(),
+  rawResponses: z.array(z.number()),
+  dimensions: z.object({
+    openness: dimensionSchema,
+    conscientiousness: dimensionSchema,
+    extraversion: dimensionSchema,
+    agreeableness: dimensionSchema,
+    emotionalStability: dimensionSchema,
+  }),
+  combinationInsights: z.array(z.string()),
+  recommendations: z.array(z.string()),
+});
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
+  // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -17,6 +51,58 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // ─── Perfis Big Five (banco de dados) ──────────────────────────────────────
+  profiles: router({
+    /** Busca todos os perfis salvos no banco */
+    list: publicProcedure.query(async () => {
+      const rows = await getAllBigfiveProfiles();
+      // Converter de volta ao formato BigFiveProfile esperado pelo frontend
+      return rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        timestamp: row.responseTimestamp,
+        dimensions: row.dimensions as any,
+        combinationInsights: row.combinationInsights as string[],
+        recommendations: row.recommendations as string[],
+      }));
+    }),
+
+    /** Salva ou atualiza um lote de perfis no banco */
+    upsertBatch: publicProcedure
+      .input(z.array(profileInputSchema))
+      .mutation(async ({ input }) => {
+        for (const profile of input) {
+          await upsertBigfiveProfile({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            responseTimestamp: profile.timestamp,
+            rawResponses: profile.rawResponses,
+            dimensions: profile.dimensions,
+            combinationInsights: profile.combinationInsights,
+            recommendations: profile.recommendations,
+          });
+        }
+        return { saved: input.length };
+      }),
+
+    /** Remove um perfil pelo ID */
+    delete: publicProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input }) => {
+        await deleteBigfiveProfile(input.id);
+        return { success: true };
+      }),
+
+    /** Remove todos os perfis */
+    deleteAll: publicProcedure
+      .mutation(async () => {
+        await deleteAllBigfiveProfiles();
+        return { success: true };
+      }),
   }),
 
   // Notificação de nova resposta
@@ -82,13 +168,6 @@ export const appRouter = router({
       return { csv: csvText };
     }),
   }),
-
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
 });
 
 export type AppRouter = typeof appRouter;

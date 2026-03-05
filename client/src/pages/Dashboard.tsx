@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useBigFive } from '@/contexts/BigFiveContext';
 import { FileUpload } from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -34,7 +33,6 @@ const CLASSIFICATION_OPTIONS = [
 ];
 
 export default function Dashboard() {
-  const { profiles, clearData, setSelectedProfile, addProfiles } = useBigFive();
   const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDimension, setFilterDimension] = useState<DimKey | ''>('');
@@ -43,8 +41,25 @@ export default function Dashboard() {
   const { fetchSheetData, loading: sheetLoading, lastUpdate } = useGoogleSheets();
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const knownProfileIds = useRef<Set<string>>(new Set());
+  const knownEmails = useRef<Set<string>>(new Set());
   const notifyNewResponse = trpc.notifications.newResponse.useMutation();
+  const utils = trpc.useUtils();
+
+  // ─── Carregar perfis do banco ────────────────────────────────────────────
+  const { data: dbProfiles = [], isLoading: dbLoading } = trpc.profiles.list.useQuery(undefined, {
+    staleTime: 30_000, // revalidar a cada 30s
+  });
+
+  const upsertBatch = trpc.profiles.upsertBatch.useMutation({
+    onSuccess: () => utils.profiles.list.invalidate(),
+  });
+
+  const deleteAllMutation = trpc.profiles.deleteAll.useMutation({
+    onSuccess: () => utils.profiles.list.invalidate(),
+  });
+
+  // Converter os dados do banco para BigFiveProfile
+  const profiles: BigFiveProfile[] = dbProfiles as unknown as BigFiveProfile[];
 
   const hasActiveFilters = filterDimension !== '' || filterClassification !== '';
   const { exportAllPDFs, isExporting, progress } = useBatchExport();
@@ -54,11 +69,11 @@ export default function Dashboard() {
     setFilterClassification('');
   };
 
-  // Detectar novos respondentes e notificar
+  // ─── Detectar novos respondentes e notificar ─────────────────────────────
   const detectAndNotifyNewProfiles = (newProfiles: BigFiveProfile[]) => {
-    const isFirstLoad = knownProfileIds.current.size === 0;
-    const newOnes = newProfiles.filter(p => !knownProfileIds.current.has(p.id));
-    newProfiles.forEach(p => knownProfileIds.current.add(p.id));
+    const isFirstLoad = knownEmails.current.size === 0;
+    const newOnes = newProfiles.filter(p => !knownEmails.current.has(p.email));
+    newProfiles.forEach(p => knownEmails.current.add(p.email));
     if (!isFirstLoad && newOnes.length > 0) {
       newOnes.forEach(p => {
         notifyNewResponse.mutate({
@@ -83,64 +98,66 @@ export default function Dashboard() {
     return newOnes;
   };
 
-  useEffect(() => {
-    const loadDataFromSheet = async () => {
-      if (!autoSyncEnabled) return;
-      try {
-        setSyncError(null);
-        const data = await fetchSheetData();
-        if (data.length > 0) {
-          addProfiles(data);
-          data.forEach(p => knownProfileIds.current.add(p.id));
-          toast.success(`${data.length} perfil(is) sincronizado(s) do Google Sheets!`);
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
-        setSyncError(errorMsg);
-      }
-    };
-    loadDataFromSheet();
-  }, []);
-
-  useEffect(() => {
+  // ─── Sincronizar com Google Sheets e salvar no banco ─────────────────────
+  const syncFromSheets = async (showToast = false) => {
     if (!autoSyncEnabled) return;
-    const interval = setInterval(async () => {
-      try {
-        setSyncError(null);
-        const data = await fetchSheetData();
-        if (data.length > 0) {
-          addProfiles(data);
-          detectAndNotifyNewProfiles(data);
-        }
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
-        setSyncError(errorMsg);
-      }
-    }, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [autoSyncEnabled]);
-
-  const handleManualSync = async () => {
     try {
       setSyncError(null);
       const data = await fetchSheetData();
       if (data.length > 0) {
-        addProfiles(data);
-        toast.success(`${data.length} perfil(is) sincronizado(s)!`);
+        // Salvar todos no banco (upsert por email)
+        await upsertBatch.mutateAsync(data.map((p: BigFiveProfile) => ({
+          ...p,
+          rawResponses: (p as any).rawResponses ?? [],
+        })));
+        detectAndNotifyNewProfiles(data);
+        if (showToast) {
+          toast.success(`${data.length} perfil(is) sincronizado(s) com o banco!`);
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';
       setSyncError(errorMsg);
-      toast.error(errorMsg);
+      if (showToast) toast.error(errorMsg);
     }
   };
 
-  const handleViewProfile = (profileId: string) => {
-    const profile = profiles.find((p) => p.id === profileId);
-    if (profile) {
-      setSelectedProfile(profile);
-      setLocation(`/profile/${profileId}`);
+  // Sincronização inicial ao montar
+  useEffect(() => {
+    syncFromSheets(true);
+  }, []);
+
+  // Sincronização automática a cada 5 minutos
+  useEffect(() => {
+    if (!autoSyncEnabled) return;
+    const interval = setInterval(() => syncFromSheets(false), 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [autoSyncEnabled]);
+
+  const handleManualSync = () => syncFromSheets(true);
+
+  // ─── Quando um arquivo é importado manualmente, salvar no banco ──────────
+  const handleFileImport = async (importedProfiles: BigFiveProfile[]) => {
+    if (importedProfiles.length === 0) return;
+    try {
+      await upsertBatch.mutateAsync(importedProfiles.map((p: BigFiveProfile) => ({
+        ...p,
+        rawResponses: (p as any).rawResponses ?? [],
+      })));
+      toast.success(`${importedProfiles.length} perfil(is) importado(s) e salvos no banco!`);
+    } catch (error) {
+      toast.error('Erro ao salvar perfis importados');
     }
+  };
+
+  const handleClearData = async () => {
+    await deleteAllMutation.mutateAsync();
+    knownEmails.current.clear();
+    toast.success('Todos os dados foram removidos.');
+  };
+
+  const handleViewProfile = (profileId: string) => {
+    setLocation(`/profile/${profileId}`);
   };
 
   const filteredProfiles = profiles.filter((p) => {
@@ -162,6 +179,8 @@ export default function Dashboard() {
     }
     return true;
   });
+
+  const isLoading = dbLoading || sheetLoading || upsertBatch.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -187,7 +206,7 @@ export default function Dashboard() {
           </Card>
         )}
 
-        {profiles.length === 0 ? (
+        {profiles.length === 0 && !isLoading ? (
           <div className="max-w-2xl mx-auto space-y-6">
             <Card className="p-6 border-primary/20 bg-primary/5">
               <div className="flex items-start gap-4">
@@ -195,12 +214,12 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <h3 className="font-semibold mb-2">Sincronização Automática Ativada</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    O dashboard está conectado ao seu Google Forms e buscará as respostas automaticamente a cada 5 minutos.
+                    O dashboard está conectado ao seu Google Forms e buscará as respostas automaticamente a cada 5 minutos. Os dados ficam salvos no banco de dados — disponíveis em qualquer dispositivo.
                   </p>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={handleManualSync} disabled={sheetLoading}>
-                      <RefreshCw className={`w-4 h-4 mr-2 ${sheetLoading ? 'animate-spin' : ''}`} />
-                      {sheetLoading ? 'Sincronizando...' : 'Sincronizar Agora'}
+                    <Button size="sm" onClick={handleManualSync} disabled={isLoading}>
+                      <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                      {isLoading ? 'Sincronizando...' : 'Sincronizar Agora'}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}>
                       {autoSyncEnabled ? 'Desativar Auto-Sync' : 'Ativar Auto-Sync'}
@@ -214,7 +233,12 @@ export default function Dashboard() {
                 </div>
               </div>
             </Card>
-            <FileUpload />
+            <FileUpload onImport={handleFileImport} />
+          </div>
+        ) : isLoading && profiles.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-3 text-muted-foreground">Carregando perfis do banco...</span>
           </div>
         ) : (
           <div className="space-y-8">
@@ -253,97 +277,98 @@ export default function Dashboard() {
                   <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-bounce' : ''}`} />
                   {isExporting ? `Exportando... ${progress}%` : `Exportar ${filteredProfiles.length} PDF(s)`}
                 </Button>
-                <Button variant="destructive" size="sm" onClick={clearData} className="w-full">
+                <Button variant="destructive" size="sm" onClick={handleClearData} disabled={deleteAllMutation.isPending} className="w-full">
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Limpar Dados
+                  {deleteAllMutation.isPending ? 'Removendo...' : 'Limpar Dados'}
                 </Button>
               </Card>
             </div>
 
-            {/* Controles de Busca e Filtros */}
+            {/* Barra de busca e filtros */}
             <div className="space-y-3">
-              <div className="flex gap-3 items-end">
+              <div className="flex gap-3 items-center">
                 <div className="flex-1">
-                  <label className="text-sm font-medium mb-2 block">Buscar Respondente</label>
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Buscar Respondente</label>
                   <Input
                     placeholder="Digite o nome ou email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <Button
-                  variant={showFilters ? 'default' : 'outline'}
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="relative"
-                >
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  Filtros
-                  {hasActiveFilters && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
-                  )}
-                </Button>
-                <Button variant="outline" onClick={handleManualSync} disabled={sheetLoading}>
-                  <Cloud className={`w-4 h-4 mr-2 ${sheetLoading ? 'animate-spin' : ''}`} />
-                  {sheetLoading ? 'Sincronizando...' : 'Sincronizar'}
-                </Button>
+                <div className="flex gap-2 items-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={hasActiveFilters ? 'border-primary text-primary' : ''}
+                  >
+                    <SlidersHorizontal className="w-4 h-4 mr-2" />
+                    Filtros
+                    {hasActiveFilters && <Badge variant="default" className="ml-2 text-xs px-1.5 py-0">!</Badge>}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManualSync}
+                    disabled={isLoading}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                    Sincronizar
+                  </Button>
+                </div>
               </div>
 
-              {/* Painel de Filtros Avançados */}
+              {lastUpdate && (
+                <p className="text-xs text-muted-foreground text-right">
+                  Última sync: {lastUpdate.toLocaleTimeString('pt-BR')}
+                </p>
+              )}
+
+              {/* Painel de filtros */}
               {showFilters && (
-                <Card className="p-4 border-primary/20 bg-primary/5">
+                <Card className="p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold flex items-center gap-2">
-                      <SlidersHorizontal className="w-4 h-4" />
-                      Filtros Avançados
-                    </h3>
+                    <h3 className="text-sm font-semibold">Filtrar por Dimensão</h3>
                     {hasActiveFilters && (
-                      <Button size="sm" variant="ghost" onClick={clearFilters} className="h-7 text-xs">
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
                         <X className="w-3 h-3 mr-1" />
                         Limpar filtros
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Filtro por Dimensão */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                        Dimensão Dominante / Filtrar por
-                      </label>
+                      <label className="text-xs text-muted-foreground mb-1 block">Dimensão dominante</label>
                       <div className="flex flex-wrap gap-2">
-                        {DIMENSION_OPTIONS.map(({ key, label, emoji }) => (
+                        {DIMENSION_OPTIONS.map(opt => (
                           <button
-                            key={key}
-                            onClick={() => setFilterDimension(filterDimension === key ? '' : key)}
-                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              filterDimension === key
+                            key={opt.key}
+                            onClick={() => setFilterDimension(filterDimension === opt.key ? '' : opt.key)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                              filterDimension === opt.key
                                 ? 'bg-primary text-primary-foreground border-primary'
                                 : 'bg-background border-border hover:border-primary/50'
                             }`}
                           >
-                            <span>{emoji}</span>
-                            <span>{label}</span>
+                            {opt.emoji} {opt.label}
                           </button>
                         ))}
                       </div>
                     </div>
-
-                    {/* Filtro por Nível */}
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                        Nível de Classificação
-                      </label>
+                      <label className="text-xs text-muted-foreground mb-1 block">Nível de classificação</label>
                       <div className="flex flex-wrap gap-2">
-                        {CLASSIFICATION_OPTIONS.filter(o => o.value !== '').map(({ value, label }) => (
+                        {CLASSIFICATION_OPTIONS.slice(1).map(opt => (
                           <button
-                            key={value}
-                            onClick={() => setFilterClassification(filterClassification === value ? '' : value)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              filterClassification === value
+                            key={opt.value}
+                            onClick={() => setFilterClassification(filterClassification === opt.value ? '' : opt.value)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                              filterClassification === opt.value
                                 ? 'bg-primary text-primary-foreground border-primary'
                                 : 'bg-background border-border hover:border-primary/50'
                             }`}
                           >
-                            {label}
+                            {opt.label}
                           </button>
                         ))}
                       </div>
@@ -351,53 +376,18 @@ export default function Dashboard() {
                   </div>
                 </Card>
               )}
-
-              {/* Status dos filtros */}
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  {hasActiveFilters && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {filterDimension && (
-                        <Badge variant="secondary" className="gap-1">
-                          {DIMENSION_OPTIONS.find(d => d.key === filterDimension)?.emoji}
-                          {DIMENSION_OPTIONS.find(d => d.key === filterDimension)?.label}
-                          <button onClick={() => setFilterDimension('')} className="ml-1 hover:text-destructive">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      )}
-                      {filterClassification && (
-                        <Badge variant="secondary" className="gap-1">
-                          {CLASSIFICATION_OPTIONS.find(c => c.value === filterClassification)?.label}
-                          <button onClick={() => setFilterClassification('')} className="ml-1 hover:text-destructive">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="text-muted-foreground text-xs">
-                  {filteredProfiles.length !== profiles.length
-                    ? `${filteredProfiles.length} de ${profiles.length} respondentes`
-                    : lastUpdate
-                    ? `Última sync: ${lastUpdate.toLocaleTimeString('pt-BR')}`
-                    : ''}
-                </div>
-              </div>
             </div>
 
-            {/* Lista de Respondentes */}
+            {/* Lista de respondentes */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Respondentes</h2>
-                <span className="text-sm text-muted-foreground bg-primary/10 px-3 py-1 rounded-full">
-                  {filteredProfiles.length} {filteredProfiles.length === 1 ? 'respondente' : 'respondentes'}
-                </span>
+                <h2 className="text-xl font-semibold">Respondentes</h2>
+                <Badge variant="secondary">{filteredProfiles.length} respondente{filteredProfiles.length !== 1 ? 's' : ''}</Badge>
               </div>
+
               {filteredProfiles.length === 0 ? (
                 <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">Nenhum respondente encontrado com os filtros aplicados</p>
+                  <p className="text-muted-foreground">Nenhum respondente encontrado com os filtros aplicados.</p>
                   {hasActiveFilters && (
                     <Button variant="outline" size="sm" onClick={clearFilters} className="mt-3">
                       Limpar filtros
@@ -409,18 +399,18 @@ export default function Dashboard() {
                   {filteredProfiles.map((profile) => (
                     <Card
                       key={profile.id}
-                      className="p-4 hover:shadow-lg transition-shadow cursor-pointer hover:border-primary"
+                      className="p-5 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all"
                       onClick={() => handleViewProfile(profile.id)}
                     >
                       <div className="mb-3">
-                        <h3 className="font-semibold text-lg truncate">{profile.name}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
+                        <h3 className="font-semibold text-base leading-tight">{profile.name}</h3>
+                        <p className="text-sm text-muted-foreground">{profile.email}</p>
                       </div>
-                      <div className="grid grid-cols-5 gap-2 text-center text-xs mt-3">
-                        {(['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'emotionalStability'] as const).map(dim => (
-                          <div key={dim}>
-                            <div className="text-lg">{profile.dimensions[dim].emoji}</div>
-                            <div className="font-bold text-primary text-sm">{Math.round(profile.dimensions[dim].score)}%</div>
+                      <div className="grid grid-cols-5 gap-1">
+                        {Object.entries(profile.dimensions).map(([key, dim]) => (
+                          <div key={key} className="text-center">
+                            <div className="text-lg">{dim.emoji}</div>
+                            <div className="text-xs font-bold text-primary">{Math.round(dim.score)}%</div>
                           </div>
                         ))}
                       </div>
@@ -429,10 +419,9 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            {/* Pirâmide dos Níveis Neurológicos */}
-            <Card className="p-6 mt-4">
-              <DiltsPyramid />
-            </Card>
+
+            {/* Pirâmide de Dilts */}
+            <DiltsPyramid />
           </div>
         )}
       </div>
