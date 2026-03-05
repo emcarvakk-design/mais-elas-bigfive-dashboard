@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Users, BarChart3, Trash2, Cloud, AlertCircle, Bell, GitCompare, SlidersHorizontal, X, RefreshCw, Download } from 'lucide-react';
+import DiltsPyramid from '@/components/DiltsPyramid';
 import { useBatchExport } from '@/hooks/useBatchExport';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
@@ -428,6 +429,10 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+            {/* Pirâmide dos Níveis Neurológicos */}
+            <Card className="p-6 mt-4">
+              <DiltsPyramid />
+            </Card>
           </div>
         )}
       </div>
