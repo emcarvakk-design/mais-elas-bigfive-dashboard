@@ -2,6 +2,8 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import { notifyOwner } from "./_core/notification";
+import { z } from "zod";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -15,6 +17,39 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // Notificação de nova resposta
+  notifications: router({
+    newResponse: publicProcedure
+      .input(z.object({
+        name: z.string(),
+        email: z.string(),
+        scores: z.object({
+          openness: z.number(),
+          conscientiousness: z.number(),
+          extraversion: z.number(),
+          agreeableness: z.number(),
+          emotionalStability: z.number(),
+        }),
+      }))
+      .mutation(async ({ input }) => {
+        const { name, email, scores } = input;
+        const scoreLines = [
+          `🌿 Abertura: ${Math.round(scores.openness)}%`,
+          `⚡ Conscienciosidade: ${Math.round(scores.conscientiousness)}%`,
+          `☀️ Extroversão: ${Math.round(scores.extraversion)}%`,
+          `💚 Agradabilidade: ${Math.round(scores.agreeableness)}%`,
+          `🌊 Est. Emocional: ${Math.round(scores.emotionalStability)}%`,
+        ].join('\n');
+
+        const success = await notifyOwner({
+          title: `Nova resposta Big Five: ${name}`,
+          content: `${name} (${email}) acabou de completar o teste Big Five.\n\nResultados:\n${scoreLines}`,
+        });
+
+        return { success };
+      }),
   }),
 
   // Proxy para buscar dados do Google Sheets (evita CORS no browser)

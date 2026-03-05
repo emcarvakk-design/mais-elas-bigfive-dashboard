@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useBigFive } from '@/contexts/BigFiveContext';
 import { FileUpload } from '@/components/FileUpload';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Users, BarChart3, Trash2, RefreshCw, Cloud, AlertCircle } from 'lucide-react';
+import { Users, BarChart3, Trash2, RefreshCw, Cloud, AlertCircle, Bell } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { useGoogleSheets } from '@/hooks/useGoogleSheets';
+import { trpc } from '@/lib/trpc';
+import { BigFiveProfile } from '@/lib/bigfive';
 
 export default function Dashboard() {
   const { profiles, clearData, setSelectedProfile, addProfiles } = useBigFive();
@@ -16,6 +18,42 @@ export default function Dashboard() {
   const { fetchSheetData, loading: sheetLoading, lastUpdate } = useGoogleSheets();
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const knownProfileIds = useRef<Set<string>>(new Set());
+  const notifyNewResponse = trpc.notifications.newResponse.useMutation();
+
+  // Detectar novos respondentes e notificar
+  const detectAndNotifyNewProfiles = (newProfiles: BigFiveProfile[]) => {
+    const isFirstLoad = knownProfileIds.current.size === 0;
+    const newOnes = newProfiles.filter(p => !knownProfileIds.current.has(p.id));
+    
+    // Atualizar IDs conhecidos
+    newProfiles.forEach(p => knownProfileIds.current.add(p.id));
+    
+    // Só notifica se não for o primeiro carregamento (evita spam na inicialização)
+    if (!isFirstLoad && newOnes.length > 0) {
+      newOnes.forEach(p => {
+        notifyNewResponse.mutate({
+          name: p.name,
+          email: p.email,
+          scores: {
+            openness: p.dimensions.openness.score,
+            conscientiousness: p.dimensions.conscientiousness.score,
+            extraversion: p.dimensions.extraversion.score,
+            agreeableness: p.dimensions.agreeableness.score,
+            emotionalStability: p.dimensions.emotionalStability.score,
+          },
+        });
+      });
+      toast.success(
+        <div className="flex items-center gap-2">
+          <Bell className="w-4 h-4" />
+          <span>{newOnes.length} nova(s) resposta(s) detectada(s)! Notificação enviada.</span>
+        </div>
+      );
+    }
+    
+    return newOnes;
+  };
 
   // Buscar dados do Google Sheets ao carregar a página
   useEffect(() => {
@@ -27,6 +65,8 @@ export default function Dashboard() {
         const data = await fetchSheetData();
         if (data.length > 0) {
           addProfiles(data);
+          // Registrar IDs no primeiro carregamento (sem notificar)
+          data.forEach(p => knownProfileIds.current.add(p.id));
           toast.success(`${data.length} perfil(is) sincronizado(s) do Google Sheets!`);
         }
       } catch (error) {
@@ -39,7 +79,7 @@ export default function Dashboard() {
     loadDataFromSheet();
   }, []);
 
-  // Sincronizar a cada 5 minutos
+  // Sincronizar a cada 5 minutos e detectar novas respostas
   useEffect(() => {
     if (!autoSyncEnabled) return;
 
@@ -49,7 +89,7 @@ export default function Dashboard() {
         const data = await fetchSheetData();
         if (data.length > 0) {
           addProfiles(data);
-          console.log(`Sincronizado ${data.length} perfil(is) do Google Sheets`);
+          detectAndNotifyNewProfiles(data);
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar';

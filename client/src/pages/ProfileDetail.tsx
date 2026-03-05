@@ -3,9 +3,10 @@ import { useBigFive } from '@/contexts/BigFiveContext';
 import { DimensionCardClickable } from '@/components/DimensionCardClickable';
 import { DimensionModalExpandable } from '@/components/DimensionModalExpandable';
 import { PrintableReport } from '@/components/PrintableReport';
+import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
@@ -74,6 +75,54 @@ export default function ProfileDetail() {
               Baixar PDF
             </Button>
           </div>
+        </div>
+
+        {/* Radar + Resumo */}
+        <div className="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary" />
+              Visão Geral — Radar
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">Comparação visual das 5 dimensões</p>
+            <BigFiveRadarChart profile={profile} />
+          </Card>
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Resumo dos Escores</h2>
+            <div className="space-y-3">
+              {Object.entries(dimensions).map(([key, dim]) => {
+                const classificationLabel: Record<string, string> = {
+                  very_low: 'Muito Baixo',
+                  low: 'Baixo',
+                  moderate: 'Moderado',
+                  high: 'Elevado',
+                  very_high: 'Muito Elevado',
+                };
+                return (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className="text-xl">{dim.emoji}</span>
+                    <div className="flex-1">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">{dim.label}</span>
+                        <span className="text-sm font-bold" style={{ color: dim.score >= 70 ? '#10b981' : dim.score >= 40 ? '#f59e0b' : '#ef4444' }}>
+                          {Math.round(dim.score)}% — {classificationLabel[dim.classification]}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${dim.score}%`,
+                            backgroundColor: dim.score >= 70 ? '#10b981' : dim.score >= 40 ? '#f59e0b' : '#ef4444'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         </div>
 
         {/* Dimensões */}
