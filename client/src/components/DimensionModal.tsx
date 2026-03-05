@@ -94,7 +94,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
 
   if (!dimensionName) return 'Dimensão não identificada.';
 
-  if (dimensionName.includes('Abertura') || dimensionName.includes('Openness')) {
+  if (dimensionName.includes('Abertura') ) {
     if (score >= 80)
       return 'Você é altamente criativo e inovador, com grande curiosidade sobre o mundo. Gosta de explorar novas ideias, experiências e perspectivas. Tende a ser imaginativo, artístico e aberto a mudanças. Pode se destacar em campos criativos e de inovação.';
     if (score >= 60)
@@ -106,7 +106,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     return 'Você prefere fortemente manter as coisas como estão, com resistência a mudanças e preferência clara por rotinas estabelecidas.';
   }
 
-  if (dimensionName.includes('Conscienciosidade') || dimensionName.includes('Conscientiousness')) {
+  if (dimensionName.includes('Conscienciosidade') ) {
     if (score >= 80)
       return 'Você é altamente organizado, disciplinado e focado em objetivos. Planeja cuidadosamente, segue cronogramas e é confiável. Tende a ser perfeccionista e muito responsável. Pode se destacar em posições que exigem atenção aos detalhes e execução precisa.';
     if (score >= 60)
@@ -118,7 +118,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     return 'Você é muito espontâneo e pode procrastinar. Prefere liberdade a estrutura rígida, podendo ser desorganizado.';
   }
 
-  if (dimensionName.includes('Extroversão') || dimensionName.includes('Extraversion')) {
+  if (dimensionName.includes('Extroversão') ) {
     if (score >= 80)
       return 'Você é altamente extrovertido, energizado pelo contato social e interação com outras pessoas. Gosta de estar no centro das atenções, é comunicativo e entusiasmado. Tende a buscar estímulos externos e aprecia ambientes sociais.';
     if (score >= 60)
@@ -130,7 +130,7 @@ function getInterpretation(dimension: BigFiveDimension): string {
     return 'Você é altamente introvertido, recarregando-se na solidão. Prefere profundidade nas relações a ampla rede social.';
   }
 
-  if (dimensionName.includes('Agradabilidade') || dimensionName.includes('Agreeableness')) {
+  if (dimensionName.includes('Agradabilidade') ) {
     if (score >= 80)
       return 'Você é altamente empático, colaborativo e compassivo. Prioriza as necessidades dos outros e busca harmonia. É confiável, generoso e tende a ser bem-vindo em grupos. Pode se destacar em funções que exigem empatia e trabalho em equipe.';
     if (score >= 60)

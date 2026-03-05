@@ -111,7 +111,7 @@ export function calculateBigFiveScore(responses: number[]): BigFiveProfile['dime
   return {
     openness: {
       name: 'Abertura à Experiência',
-      label: 'Openness',
+      label: 'Abertura à Experiência',
       emoji: '🌿',
       score: openness,
       classification: getClassification(openness),
@@ -119,7 +119,7 @@ export function calculateBigFiveScore(responses: number[]): BigFiveProfile['dime
     },
     conscientiousness: {
       name: 'Conscienciosidade',
-      label: 'Conscientiousness',
+      label: 'Conscienciosidade',
       emoji: '⚡',
       score: conscientiousness,
       classification: getClassification(conscientiousness),
@@ -127,7 +127,7 @@ export function calculateBigFiveScore(responses: number[]): BigFiveProfile['dime
     },
     extraversion: {
       name: 'Extroversão',
-      label: 'Extraversion',
+      label: 'Extroversão',
       emoji: '☀️',
       score: extraversion,
       classification: getClassification(extraversion),
@@ -135,7 +135,7 @@ export function calculateBigFiveScore(responses: number[]): BigFiveProfile['dime
     },
     agreeableness: {
       name: 'Agradabilidade',
-      label: 'Agreeableness',
+      label: 'Agradabilidade',
       emoji: '💚',
       score: agreeableness,
       classification: getClassification(agreeableness),
@@ -143,7 +143,7 @@ export function calculateBigFiveScore(responses: number[]): BigFiveProfile['dime
     },
     emotionalStability: {
       name: 'Estabilidade Emocional',
-      label: 'Emotional Stability',
+      label: 'Estabilidade Emocional',
       emoji: '🌊',
       score: emotionalStability,
       classification: getClassification(emotionalStability),
