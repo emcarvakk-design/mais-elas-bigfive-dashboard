@@ -121,16 +121,71 @@ export function PrintableReport({ profile }: PrintableReportProps) {
           .radar-bar-text { font-size: 9px; font-weight: 700; color: white; }
           .radar-pct { width: 36px; text-align: right; font-size: 10px; font-weight: 700; }
 
-          /* ── Tabela de Facetas ── */
-          .facet-section { margin-bottom: 20px; page-break-inside: avoid; }
+          /* ── Seções de Facetas ── */
+          .facet-section { margin-bottom: 24px; page-break-inside: avoid; }
           .facet-section-title {
             font-size: 12px;
             font-weight: 700;
             padding: 6px 10px;
             border-radius: 4px;
             color: white;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
           }
+          /* Card de cada subfaceta */
+          .facet-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+          }
+          .facet-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+          }
+          .facet-card-name { font-weight: 700; font-size: 11px; color: #1e293b; }
+          .facet-card-tendency {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid;
+          }
+          .facet-card-desc { font-size: 10px; color: #475569; line-height: 1.4; margin-bottom: 8px; }
+          .facet-when-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+          }
+          .facet-when-high {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 5px;
+            padding: 7px 9px;
+          }
+          .facet-when-low {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 5px;
+            padding: 7px 9px;
+          }
+          .facet-when-label {
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 3px;
+          }
+          .facet-when-text { font-size: 9px; line-height: 1.4; }
+          .facet-mentor-note {
+            margin-top: 6px;
+            font-size: 9px;
+            color: #6b7280;
+            font-style: italic;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 5px;
+          }
+          /* Tabela de facetas (usada na pág. IPIP-120) */
           .facet-table { width: 100%; border-collapse: collapse; font-size: 10px; }
           .facet-table th {
             background: #f8fafc;
@@ -325,37 +380,53 @@ export function PrintableReport({ profile }: PrintableReportProps) {
               <div className="facet-section-title" style={{ backgroundColor: color }}>
                 {dimension.emoji} {dimension.label} — {Math.round(dimension.score)}% ({CLASSIFICATION_LABELS[dimension.classification]})
               </div>
-              <table className="facet-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '22%' }}>Subfaceta</th>
-                    <th style={{ width: '16%' }}>Tendência</th>
-                    <th style={{ width: '62%' }}>Descrição e Dica</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {facets.map((facet, idx) => {
-                    const tendencyLabel = facet.tendency === 'elevada' ? '↑ Elevada' : facet.tendency === 'moderada' ? '— Moderada' : '↓ Baixa';
-                    const tendencyColor = facet.tendency === 'elevada' ? '#059669' : facet.tendency === 'moderada' ? '#d97706' : '#dc2626';
-                    return (
-                      <tr key={idx}>
-                        <td style={{ fontWeight: '600' }}>{facet.name}</td>
-                        <td>
-                          <span style={{ fontWeight: '700', color: tendencyColor, fontSize: '11px' }}>{tendencyLabel}</span>
-                        </td>
-                        <td>
-                          <div>{facet.description}</div>
-                          {facet.mentorNote && (
-                            <div style={{ marginTop: '3px', fontSize: '10px', color: '#6b7280', fontStyle: 'italic' }}>
-                              Mentoring: {facet.mentorNote}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              {facets.map((facet, idx) => {
+                const tendencyLabel =
+                  facet.tendency === 'elevada' ? 'Tende a ser elevada'
+                  : facet.tendency === 'moderada' ? 'Tendência moderada'
+                  : 'Tende a ser baixa';
+                const tendencyColor =
+                  facet.tendency === 'elevada' ? '#059669'
+                  : facet.tendency === 'moderada' ? '#d97706'
+                  : '#dc2626';
+                const tendencyBg =
+                  facet.tendency === 'elevada' ? '#f0fdf4'
+                  : facet.tendency === 'moderada' ? '#fffbeb'
+                  : '#fef2f2';
+                const tendencyBorder =
+                  facet.tendency === 'elevada' ? '#86efac'
+                  : facet.tendency === 'moderada' ? '#fde68a'
+                  : '#fca5a5';
+                return (
+                  <div key={idx} className="facet-card">
+                    <div className="facet-card-header">
+                      <span className="facet-card-name">{facet.name}</span>
+                      <span
+                        className="facet-card-tendency"
+                        style={{ color: tendencyColor, backgroundColor: tendencyBg, borderColor: tendencyBorder }}
+                      >
+                        {tendencyLabel}
+                      </span>
+                    </div>
+                    <div className="facet-card-desc">{facet.description}</div>
+                    <div className="facet-when-grid">
+                      <div className="facet-when-high">
+                        <div className="facet-when-label" style={{ color: '#059669' }}>Quando elevada</div>
+                        <div className="facet-when-text" style={{ color: '#065f46' }}>{facet.highDescription}</div>
+                      </div>
+                      <div className="facet-when-low">
+                        <div className="facet-when-label" style={{ color: '#c2410c' }}>Quando baixa</div>
+                        <div className="facet-when-text" style={{ color: '#7c2d12' }}>{facet.lowDescription}</div>
+                      </div>
+                    </div>
+                    {facet.mentorNote && (
+                      <div className="facet-mentor-note">
+                        💡 Mentoring: {facet.mentorNote}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
         })}
