@@ -14,6 +14,23 @@ export interface BigFiveDimension {
   description: string;
 }
 
+export interface IPIP120SubfacetScore {
+  key: string;
+  label: string;
+  dimension: string;
+  score: number;
+  rawScore: number;
+}
+
+export interface IPIP120Data {
+  openness: number;
+  conscientiousness: number;
+  extraversion: number;
+  agreeableness: number;
+  emotionalStability: number;
+  subfacets: IPIP120SubfacetScore[];
+}
+
 export interface BigFiveProfile {
   id: string;
   name: string;
@@ -28,6 +45,8 @@ export interface BigFiveProfile {
   };
   combinationInsights: string[];
   recommendations: string[];
+  ipip120Data?: IPIP120Data | null;
+  testVersion?: string;
 }
 
 const DIMENSION_QUESTIONS = {

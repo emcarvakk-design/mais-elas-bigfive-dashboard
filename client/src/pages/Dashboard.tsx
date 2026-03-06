@@ -65,12 +65,14 @@ export default function Dashboard() {
   // Converter os dados do banco para BigFiveProfile
   const profiles: BigFiveProfile[] = dbProfiles as unknown as BigFiveProfile[];
 
-  const hasActiveFilters = filterDimension !== '' || filterClassification !== '';
+  const [filterTestVersion, setFilterTestVersion] = useState<'30q' | 'ipip120' | ''>('');
+  const hasActiveFilters = filterDimension !== '' || filterClassification !== '' || filterTestVersion !== '';
   const { exportAllPDFs, isExporting, progress } = useBatchExport();
 
   const clearFilters = () => {
     setFilterDimension('');
     setFilterClassification('');
+    setFilterTestVersion('');
   };
 
   // ─── Detectar novos respondentes e notificar ─────────────────────────────
@@ -216,7 +218,12 @@ export default function Dashboard() {
       return dominant[0] === filterDimension;
     }
     if (!filterDimension && filterClassification) {
-      return Object.values(p.dimensions).some(d => d.classification === filterClassification);
+      if (!Object.values(p.dimensions).some(d => d.classification === filterClassification)) return false;
+    }
+    if (filterTestVersion) {
+      const tv = (p as any).testVersion ?? '30q';
+      if (filterTestVersion === 'ipip120' && tv !== 'ipip120') return false;
+      if (filterTestVersion === '30q' && tv === 'ipip120') return false;
     }
     return true;
   });
@@ -392,7 +399,25 @@ export default function Dashboard() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Instrumento</label>
+                      <div className="flex flex-wrap gap-2">
+                        {(['30q', 'ipip120'] as const).map(v => (
+                          <button
+                            key={v}
+                            onClick={() => setFilterTestVersion(filterTestVersion === v ? '' : v)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                              filterTestVersion === v
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-background border-border hover:border-primary/50'
+                            }`}
+                          >
+                            {v === '30q' ? '📝 30 Questões' : '🔬 IPIP-120'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">Dimensão dominante</label>
                       <div className="flex flex-wrap gap-2">

@@ -1,4 +1,4 @@
-import { BigFiveProfile } from '@/lib/bigfive';
+import { BigFiveProfile, IPIP120SubfacetScore } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
 import { generateProfessionalInsights } from '@/lib/professionalInsights';
 import { POWERFUL_QUESTIONS } from '@/lib/powerfulQuestions';
@@ -23,9 +23,14 @@ const CLASSIFICATION_LABELS: Record<string, string> = {
   very_high: 'Muito Elevado',
 };
 
+const DIMENSION_ORDER = ['emotionalStability', 'extraversion', 'openness', 'agreeableness', 'conscientiousness'] as const;
+
 export function PrintableReport({ profile }: PrintableReportProps) {
   const { dimensions } = profile;
   const professionalInsights = generateProfessionalInsights(profile);
+  const isIPIP120 = profile.testVersion === 'ipip120' && !!profile.ipip120Data?.subfacets?.length;
+  const ipip120 = profile.ipip120Data;
+  const totalPages = isIPIP120 ? 6 : 5;
 
   return (
     <div className="hidden print:block">
@@ -244,10 +249,14 @@ export function PrintableReport({ profile }: PrintableReportProps) {
       <div className="print-page">
         <div className="report-header">
           <h1>Relatório de Personalidade Big Five</h1>
-          <p className="subtitle">Análise baseada no modelo dos Cinco Grandes Fatores de Personalidade</p>
+          <p className="subtitle">
+            Análise baseada no modelo dos Cinco Grandes Fatores de Personalidade
+            {isIPIP120 && ' — Instrumento IPIP-NEO-120'}
+          </p>
           <p className="meta">
             {profile.name} &nbsp;|&nbsp; {profile.email} &nbsp;|&nbsp;
             Data: {new Date(profile.timestamp).toLocaleDateString('pt-BR')}
+            {isIPIP120 && ' &nbsp;|&nbsp; IPIP-NEO-120 (120 questões)'}
           </p>
         </div>
 
@@ -295,7 +304,7 @@ export function PrintableReport({ profile }: PrintableReportProps) {
         </div>
 
         <div className="report-footer">
-          Relatório confidencial gerado pelo Big Five Dashboard — Página 1 de 4
+          Relatório confidencial gerado pelo Big Five Dashboard — Página 1 de {totalPages}
         </div>
       </div>
 
@@ -352,7 +361,7 @@ export function PrintableReport({ profile }: PrintableReportProps) {
         })}
 
         <div className="report-footer">
-          Relatório confidencial gerado pelo Big Five Dashboard — Página 2 de 4
+          Relatório confidencial gerado pelo Big Five Dashboard — Página 2 de {totalPages}
         </div>
       </div>
 
@@ -374,7 +383,7 @@ export function PrintableReport({ profile }: PrintableReportProps) {
         ))}
 
         <div className="report-footer">
-          Relatório confidencial gerado pelo Big Five Dashboard — Página 3 de 4
+          Relatório confidencial gerado pelo Big Five Dashboard — Página 3 de {totalPages}
         </div>
       </div>
 
@@ -411,7 +420,7 @@ export function PrintableReport({ profile }: PrintableReportProps) {
 
         <div className="report-footer" style={{ marginTop: '30px' }}>
           Este relatório é confidencial e destinado exclusivamente ao respondente e profissionais autorizados.
-          Gerado pelo Big Five Dashboard — Página 4 de 5
+          Gerado pelo Big Five Dashboard — Página 4 de {totalPages}
         </div>
       </div>
 
@@ -444,7 +453,7 @@ export function PrintableReport({ profile }: PrintableReportProps) {
                   {pq.questions.map((q, idx) => (
                     <li key={idx} className="pq-item">
                       <span className="pq-num">{idx + 1}</span>
-                      <p className="pq-text">“{q.question}”</p>
+                      <p className="pq-text">"{q.question}"</p>
                     </li>
                   ))}
                 </ul>
@@ -455,9 +464,75 @@ export function PrintableReport({ profile }: PrintableReportProps) {
 
         <div className="report-footer" style={{ marginTop: '20px' }}>
           Este relatório é confidencial e destinado exclusivamente ao respondente e profissionais autorizados.
-          Gerado pelo Big Five Dashboard — Página 5 de 5
+          Gerado pelo Big Five Dashboard — Página 5 de {totalPages}
         </div>
       </div>
+
+      {/* ════════════════════════════════════════════
+          PÁGINA 6 — Subfacetas IPIP-NEO-120
+          (apenas para perfis com testVersion === 'ipip120')
+      ════════════════════════════════════════════ */}
+      {isIPIP120 && ipip120 && (
+        <div className="print-page">
+          <div className="report-header" style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
+            <h1>Subfacetas IPIP-NEO-120</h1>
+            <p className="subtitle">{profile.name} — Escores reais das 30 subfacetas do instrumento validado</p>
+            <p className="meta">Instrumento: IPIP-NEO-120 (Johnson, 2014) · 120 questões · 5 dimensões × 6 subfacetas × 4 itens</p>
+          </div>
+
+          {DIMENSION_ORDER.map(dimKey => {
+            const dimSubfacets = ipip120.subfacets.filter((s: IPIP120SubfacetScore) => s.dimension === dimKey);
+            const dim = dimensions[dimKey];
+            const color = DIMENSION_COLORS[dimKey] || '#10b981';
+            if (!dim || dimSubfacets.length === 0) return null;
+            const dimScore = (ipip120 as any)[dimKey] ?? dim.score;
+            return (
+              <div key={dimKey} className="facet-section">
+                <div className="facet-section-title" style={{ backgroundColor: color }}>
+                  {dim.emoji} {dim.label} — Escore Geral: {Math.round(dimScore)}%
+                </div>
+                <table className="facet-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '30%' }}>Subfaceta</th>
+                      <th style={{ width: '14%' }}>Escore</th>
+                      <th style={{ width: '56%' }}>Barra de Progresso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dimSubfacets.map((s: IPIP120SubfacetScore, idx: number) => {
+                      const barColor = s.score >= 70 ? '#10b981' : s.score >= 40 ? '#f59e0b' : '#ef4444';
+                      const levelLabel = s.score >= 70 ? 'Elevado' : s.score >= 40 ? 'Moderado' : 'Baixo';
+                      return (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: '600' }}>{s.label}</td>
+                          <td>
+                            <span style={{ fontWeight: '800', color: barColor, fontSize: '13px' }}>{s.score}%</span>
+                            <div style={{ fontSize: '9px', color: barColor }}>{levelLabel}</div>
+                          </td>
+                          <td>
+                            <div className="bar-bg" style={{ height: '10px' }}>
+                              <div className="bar-fill" style={{ width: `${s.score}%`, backgroundColor: barColor, height: '100%' }} />
+                            </div>
+                            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '2px' }}>
+                              Escore bruto: {s.rawScore}/20
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+
+          <div className="report-footer" style={{ marginTop: '20px' }}>
+            Este relatório é confidencial e destinado exclusivamente ao respondente e profissionais autorizados.
+            Gerado pelo Big Five Dashboard — Página 6 de 6
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { BigFiveProfile } from '@/lib/bigfive';
+import { BigFiveProfile, IPIP120SubfacetScore } from '@/lib/bigfive';
 
 const PROFILE_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ec4899', '#3b82f6'];
 
@@ -116,11 +116,121 @@ function ComparisonRadar({ profiles }: ComparisonRadarProps) {
   );
 }
 
+const DIMENSION_COLORS_MAP: Record<string, string> = {
+  openness: '#6366f1',
+  conscientiousness: '#f59e0b',
+  extraversion: '#10b981',
+  agreeableness: '#ec4899',
+  emotionalStability: '#3b82f6',
+};
+
+const SUBFACET_DIMENSION_ORDER = ['emotionalStability', 'extraversion', 'openness', 'agreeableness', 'conscientiousness'] as const;
+
+function SubfacetComparisonTable({ profiles }: { profiles: BigFiveProfile[] }) {
+  const ipip120Profiles = profiles.filter(p => p.testVersion === 'ipip120' && p.ipip120Data?.subfacets?.length);
+  if (ipip120Profiles.length < 2) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p className="font-medium">Comparação de subfacetas requer</p>
+        <p className="text-sm mt-1">pelo menos 2 perfis com dados IPIP-NEO-120 selecionados</p>
+        <p className="text-xs mt-2 text-muted-foreground/60">
+          {ipip120Profiles.length === 1 ? '1 perfil IPIP-120 selecionado — selecione mais 1' : 'Nenhum perfil IPIP-120 selecionado'}
+        </p>
+      </div>
+    );
+  }
+
+  // Coletar todas as subfacetas únicas
+  const allSubfacetKeys = Array.from(
+    new Set(ipip120Profiles.flatMap(p => p.ipip120Data!.subfacets.map((s: IPIP120SubfacetScore) => s.key)))
+  );
+
+  return (
+    <div className="space-y-6">
+      {SUBFACET_DIMENSION_ORDER.map(dimKey => {
+        const dimSubfacetKeys = allSubfacetKeys.filter(k => {
+          const s = ipip120Profiles[0].ipip120Data!.subfacets.find((sf: IPIP120SubfacetScore) => sf.key === k);
+          return s?.dimension === dimKey;
+        });
+        if (dimSubfacetKeys.length === 0) return null;
+        const dimInfo = DIMENSION_KEYS.find(d => d.key === dimKey);
+        const dimColor = DIMENSION_COLORS_MAP[dimKey] || '#6366f1';
+        return (
+          <div key={dimKey}>
+            <div
+              className="text-sm font-bold px-3 py-2 rounded-t-md text-white mb-0"
+              style={{ backgroundColor: dimColor }}
+            >
+              {dimInfo?.emoji} {dimInfo?.label}
+            </div>
+            <div className="overflow-x-auto border border-t-0 rounded-b-md">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground w-40">Subfaceta</th>
+                    {ipip120Profiles.map((p, i) => (
+                      <th key={p.id} className="text-center py-2 px-3 font-medium" style={{ color: PROFILE_COLORS[i % PROFILE_COLORS.length] }}>
+                        {p.name.split(' ')[0]}
+                      </th>
+                    ))}
+                    {ipip120Profiles.length === 2 && (
+                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Δ Diff</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {dimSubfacetKeys.map(sfKey => {
+                    const scores = ipip120Profiles.map(p => {
+                      const sf = p.ipip120Data!.subfacets.find((s: IPIP120SubfacetScore) => s.key === sfKey);
+                      return sf ? sf.score : null;
+                    });
+                    const label = ipip120Profiles[0].ipip120Data!.subfacets.find((s: IPIP120SubfacetScore) => s.key === sfKey)?.label ?? sfKey;
+                    const diff = scores.length === 2 && scores[0] != null && scores[1] != null
+                      ? Math.abs(scores[0] - scores[1])
+                      : null;
+                    return (
+                      <tr key={sfKey} className="border-b last:border-0 hover:bg-muted/20">
+                        <td className="py-2 px-3 font-medium text-xs">{label}</td>
+                        {scores.map((score, i) => {
+                          if (score == null) return <td key={i} className="py-2 px-3 text-center text-muted-foreground text-xs">—</td>;
+                          const barColor = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444';
+                          return (
+                            <td key={i} className="py-2 px-3">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="font-bold text-sm" style={{ color: barColor }}>{score}%</span>
+                                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                                  <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: barColor }} />
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        })}
+                        {ipip120Profiles.length === 2 && diff != null && (
+                          <td className="py-2 px-3 text-center">
+                            <span className={`text-xs font-bold ${diff >= 20 ? 'text-destructive' : diff >= 10 ? 'text-amber-500' : 'text-muted-foreground'}`}>
+                              {diff >= 20 ? '⚠️' : diff >= 10 ? '~' : '≈'} {diff}%
+                            </span>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Compare() {
   const { data: dbProfiles = [] } = trpc.profiles.list.useQuery();
   const profiles = dbProfiles as unknown as BigFiveProfile[];
   const [, setLocation] = useLocation();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'dimensions' | 'subfacets'>('dimensions');
 
   const selectedProfiles = selectedIds
     .map((id) => profiles.find((p) => p.id === id))
@@ -219,6 +329,32 @@ export default function Compare() {
               </Card>
             ) : (
               <>
+                {/* Abas de navegação */}
+                <div className="flex gap-2 border-b pb-0">
+                  <button
+                    onClick={() => setActiveTab('dimensions')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'dimensions'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    📊 Dimensões
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('subfacets')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'subfacets'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    🔬 Subfacetas IPIP-120
+                  </button>
+                </div>
+
+                {activeTab === 'dimensions' && (
+                <>
                 {/* Radar Sobreposto */}
                 <Card className="p-6">
                   <h2 className="font-semibold mb-1">Radar Comparativo</h2>
@@ -344,6 +480,18 @@ export default function Compare() {
                     );
                   })}
                 </div>
+                </>
+                )}
+
+                {activeTab === 'subfacets' && (
+                  <Card className="p-6">
+                    <h2 className="font-semibold mb-1">Comparação de Subfacetas IPIP-NEO-120</h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Escores reais das 30 subfacetas para perfis com o instrumento completo
+                    </p>
+                    <SubfacetComparisonTable profiles={selectedProfiles} />
+                  </Card>
+                )}
               </>
             )}
           </div>
