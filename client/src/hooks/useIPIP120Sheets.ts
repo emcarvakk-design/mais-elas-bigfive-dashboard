@@ -22,7 +22,8 @@ export function parseIPIP120CSV(csvText: string): any[] {
   const lines = csvText.split('\n').filter(line => line.trim());
 
   if (lines.length < 2) {
-    throw new Error('Planilha IPIP-120 vazia ou inválida');
+    // Planilha só tem cabeçalho (sem respostas ainda) — retorna array vazio
+    return [];
   }
 
   const headers = parseCSVLine(lines[0]);
@@ -129,10 +130,6 @@ export function useIPIP120Sheets() {
       }
 
       const profiles = parseIPIP120CSV(result.csv);
-
-      if (profiles.length === 0) {
-        throw new Error('Nenhuma resposta válida encontrada na planilha IPIP-120');
-      }
 
       setLastUpdate(new Date());
       return profiles;

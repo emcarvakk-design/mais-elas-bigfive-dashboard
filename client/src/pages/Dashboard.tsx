@@ -141,6 +141,8 @@ export default function Dashboard() {
         if (showToast) {
           toast.success(`IPIP-120: ${data.length} perfil(is) sincronizado(s)!`);
         }
+      } else if (showToast) {
+        toast.info('IPIP-120: Nenhuma resposta encontrada na planilha ainda.');
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar IPIP-120';
