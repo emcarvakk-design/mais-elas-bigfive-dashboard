@@ -10,6 +10,7 @@ import { useBatchExport } from '@/hooks/useBatchExport';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { useGoogleSheets } from '@/hooks/useGoogleSheets';
+import { useIPIP120Sheets } from '@/hooks/useIPIP120Sheets';
 import { trpc } from '@/lib/trpc';
 import { BigFiveProfile } from '@/lib/bigfive';
 
@@ -39,8 +40,11 @@ export default function Dashboard() {
   const [filterClassification, setFilterClassification] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const { fetchSheetData, loading: sheetLoading, lastUpdate } = useGoogleSheets();
+  const { fetchIPIP120Data, loading: ipip120Loading } = useIPIP120Sheets();
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [ipip120SyncError, setIpip120SyncError] = useState<string | null>(null);
+  const [ipip120LastUpdate, setIpip120LastUpdate] = useState<Date | null>(null);
   const knownEmails = useRef<Set<string>>(new Set());
   const notifyNewResponse = trpc.notifications.newResponse.useMutation();
   const utils = trpc.useUtils();
@@ -98,14 +102,13 @@ export default function Dashboard() {
     return newOnes;
   };
 
-  // ─── Sincronizar com Google Sheets e salvar no banco ─────────────────────
+  // ─── Sincronizar formulário de 30 questões com Google Sheets ────────────
   const syncFromSheets = async (showToast = false) => {
     if (!autoSyncEnabled) return;
     try {
       setSyncError(null);
       const data = await fetchSheetData();
       if (data.length > 0) {
-        // Salvar todos no banco (upsert por email)
         await upsertBatch.mutateAsync(data.map((p: BigFiveProfile) => ({
           ...p,
           rawResponses: (p as any).rawResponses ?? [],
@@ -122,19 +125,55 @@ export default function Dashboard() {
     }
   };
 
+  // ─── Sincronizar formulário IPIP-NEO-120 ─────────────────────────────────
+  const syncFromIPIP120 = async (showToast = false) => {
+    if (!autoSyncEnabled) return;
+    try {
+      setIpip120SyncError(null);
+      const data = await fetchIPIP120Data();
+      if (data.length > 0) {
+        await upsertBatch.mutateAsync(data.map((p: BigFiveProfile) => ({
+          ...p,
+          rawResponses: (p as any).rawResponses ?? [],
+        })));
+        detectAndNotifyNewProfiles(data);
+        setIpip120LastUpdate(new Date());
+        if (showToast) {
+          toast.success(`IPIP-120: ${data.length} perfil(is) sincronizado(s)!`);
+        }
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Erro ao sincronizar IPIP-120';
+      // Se não houver respostas ainda, não mostrar como erro crítico
+      if (errorMsg.includes('Nenhuma resposta') || errorMsg.includes('vazia')) {
+        setIpip120SyncError(null); // Planilha vazia é esperado
+      } else {
+        setIpip120SyncError(errorMsg);
+        if (showToast) toast.error(`IPIP-120: ${errorMsg}`);
+      }
+    }
+  };
+
   // Sincronização inicial ao montar
   useEffect(() => {
     syncFromSheets(true);
+    syncFromIPIP120(false); // Silencioso na carga inicial
   }, []);
 
   // Sincronização automática a cada 5 minutos
   useEffect(() => {
     if (!autoSyncEnabled) return;
-    const interval = setInterval(() => syncFromSheets(false), 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      syncFromSheets(false);
+      syncFromIPIP120(false);
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [autoSyncEnabled]);
 
-  const handleManualSync = () => syncFromSheets(true);
+  const handleManualSync = () => {
+    syncFromSheets(true);
+    syncFromIPIP120(true);
+  };
 
   // ─── Quando um arquivo é importado manualmente, salvar no banco ──────────
   const handleFileImport = async (importedProfiles: BigFiveProfile[]) => {
@@ -180,7 +219,7 @@ export default function Dashboard() {
     return true;
   });
 
-  const isLoading = dbLoading || sheetLoading || upsertBatch.isPending;
+  const isLoading = dbLoading || sheetLoading || ipip120Loading || upsertBatch.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,14 +232,25 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Erro de Sincronização */}
+        {/* Erros de Sincronização */}
         {syncError && (
           <Card className="p-4 mb-6 border-destructive/50 bg-destructive/10">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="font-semibold text-destructive">Erro na sincronização</p>
+                <p className="font-semibold text-destructive">Erro na sincronização (30 questões)</p>
                 <p className="text-sm text-muted-foreground mt-1">{syncError}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+        {ipip120SyncError && (
+          <Card className="p-4 mb-6 border-orange-500/50 bg-orange-500/10">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-orange-600">Erro na sincronização IPIP-120</p>
+                <p className="text-sm text-muted-foreground mt-1">{ipip120SyncError}</p>
               </div>
             </div>
           </Card>
@@ -225,9 +275,11 @@ export default function Dashboard() {
                       {autoSyncEnabled ? 'Desativar Auto-Sync' : 'Ativar Auto-Sync'}
                     </Button>
                   </div>
-                  {lastUpdate && (
+                  {(lastUpdate || ipip120LastUpdate) && (
                     <p className="text-xs text-muted-foreground mt-3">
-                      Última sincronização: {lastUpdate.toLocaleTimeString('pt-BR')}
+                      {lastUpdate && `30 questões: ${lastUpdate.toLocaleTimeString('pt-BR')}`}
+                      {lastUpdate && ipip120LastUpdate && ' • '}
+                      {ipip120LastUpdate && `IPIP-120: ${ipip120LastUpdate.toLocaleTimeString('pt-BR')}`}
                     </p>
                   )}
                 </div>
@@ -318,9 +370,11 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {lastUpdate && (
+              {(lastUpdate || ipip120LastUpdate) && (
                 <p className="text-xs text-muted-foreground text-right">
-                  Última sync: {lastUpdate.toLocaleTimeString('pt-BR')}
+                  {lastUpdate && `30q: ${lastUpdate.toLocaleTimeString('pt-BR')}`}
+                  {lastUpdate && ipip120LastUpdate && ' • '}
+                  {ipip120LastUpdate && `IPIP-120: ${ipip120LastUpdate.toLocaleTimeString('pt-BR')}`}
                 </p>
               )}
 
@@ -403,7 +457,14 @@ export default function Dashboard() {
                       onClick={() => handleViewProfile(profile.id)}
                     >
                       <div className="mb-3">
-                        <h3 className="font-semibold text-base leading-tight">{profile.name}</h3>
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold text-base leading-tight">{profile.name}</h3>
+                          {(profile as any).testVersion === 'ipip120' && (
+                            <span className="flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                              IPIP-120
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{profile.email}</p>
                       </div>
                       <div className="grid grid-cols-5 gap-1">

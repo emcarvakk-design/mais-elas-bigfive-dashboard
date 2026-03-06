@@ -37,6 +37,8 @@ const profileInputSchema = z.object({
   }),
   combinationInsights: z.array(z.string()),
   recommendations: z.array(z.string()),
+  ipip120Data: z.any().optional(),
+  testVersion: z.string().optional(),
 });
 
 export const appRouter = router({
@@ -67,6 +69,8 @@ export const appRouter = router({
         dimensions: row.dimensions as any,
         combinationInsights: row.combinationInsights as string[],
         recommendations: row.recommendations as string[],
+        ipip120Data: row.ipip120Data as any ?? null,
+        testVersion: row.testVersion ?? '30q',
       }));
     }),
 
@@ -84,6 +88,8 @@ export const appRouter = router({
             dimensions: profile.dimensions,
             combinationInsights: profile.combinationInsights,
             recommendations: profile.recommendations,
+            ipip120Data: profile.ipip120Data ?? null,
+            testVersion: profile.testVersion ?? '30q',
           });
         }
         return { saved: input.length };
@@ -140,6 +146,7 @@ export const appRouter = router({
 
   // Proxy para buscar dados do Google Sheets (evita CORS no browser)
   sheets: router({
+    /** Planilha original (30 questões) */
     fetchResponses: publicProcedure.query(async () => {
       const SHEET_ID = '1gStVG2NRfrQe7E2fGMU1RC2xwRd2ZGcX50oJHLeG-3U';
       const SHEET_GID = '724087005';
@@ -163,6 +170,33 @@ export const appRouter = router({
       const csvText = await response.text();
       if (!csvText.trim()) {
         throw new Error('Planilha vazia ou inacessível');
+      }
+
+      return { csv: csvText };
+    }),
+
+    /** Planilha IPIP-NEO-120 (120 questões) */
+    fetchResponsesIPIP120: publicProcedure.query(async () => {
+      const SHEET_ID = '1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E';
+      const SHEET_GID = '1081644880';
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+
+      let response = await fetch(csvUrl, { redirect: 'follow' });
+      
+      if (response.status === 307 || response.status === 302 || response.status === 301) {
+        const location = response.headers.get('location');
+        if (location) {
+          response = await fetch(location, { redirect: 'follow' });
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar planilha IPIP-120: ${response.status} ${response.statusText}`);
+      }
+
+      const csvText = await response.text();
+      if (!csvText.trim()) {
+        throw new Error('Planilha IPIP-120 vazia ou inacessível');
       }
 
       return { csv: csvText };

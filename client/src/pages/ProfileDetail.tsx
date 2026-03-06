@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DimensionCardClickable } from '@/components/DimensionCardClickable';
 import { DimensionModalExpandable } from '@/components/DimensionModalExpandable';
 import { PrintableReport } from '@/components/PrintableReport';
 import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2 } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
 import { generateProfessionalInsights } from '@/lib/professionalInsights';
 import { trpc } from '@/lib/trpc';
+import { SUBFACET_MAP, type SubfacetScore } from '@/lib/ipip120';
 
 export default function ProfileDetail() {
   const [, setLocation] = useLocation();
@@ -48,6 +49,8 @@ export default function ProfileDetail() {
   }
 
   const { dimensions, combinationInsights, recommendations } = profile;
+  const isIPIP120 = profile.testVersion === 'ipip120' && profile.ipip120Data;
+  const ipip120 = isIPIP120 ? profile.ipip120Data : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,7 +67,15 @@ export default function ProfileDetail() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold">{profile.name}</h1>
-              <p className="text-muted-foreground">{profile.email}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-muted-foreground">{profile.email}</p>
+                {isIPIP120 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    <BarChart2 className="w-3 h-3" />
+                    IPIP-NEO-120
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -135,6 +146,54 @@ export default function ProfileDetail() {
             </div>
           </Card>
         </div>
+
+        {/* Subfacetas IPIP-120 resumidas */}
+        {isIPIP120 && ipip120?.subfacets && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+              <BarChart2 className="w-6 h-6 text-emerald-600" />
+              Subfacetas IPIP-NEO-120
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Escores reais das 30 subfacetas medidas pelo instrumento validado IPIP-NEO-120.
+              Clique em cada dimensão abaixo para ver os detalhes de cada subfaceta.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {(['emotionalStability', 'extraversion', 'openness', 'agreeableness', 'conscientiousness'] as const).map(dimKey => {
+                const dimSubfacets = (ipip120.subfacets as any[]).filter((s: any) => s.dimension === dimKey);
+                const dimInfo = dimensions[dimKey];
+                if (!dimInfo || dimSubfacets.length === 0) return null;
+                return (
+                  <div key={dimKey} className="space-y-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">{dimInfo.emoji}</span>
+                      <span className="text-sm font-semibold">{dimInfo.label}</span>
+                    </div>
+                    {dimSubfacets.map((s: any) => (
+                      <div key={s.key} className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <div className="flex justify-between text-xs mb-0.5">
+                            <span className="text-muted-foreground truncate">{s.label}</span>
+                            <span className="font-bold ml-1" style={{ color: s.score >= 70 ? '#10b981' : s.score >= 40 ? '#f59e0b' : '#ef4444' }}>{s.score}%</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${s.score}%`,
+                                backgroundColor: s.score >= 70 ? '#10b981' : s.score >= 40 ? '#f59e0b' : '#ef4444'
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Dimensões */}
         <div className="mb-12">
@@ -233,11 +292,17 @@ export default function ProfileDetail() {
       {/* Modal de Detalhes da Dimensão */}
       {selectedDimension && (() => {
         const dimKey = Object.entries(dimensions).find(([_, d]) => d === selectedDimension)?.[0] || '';
+        // Para IPIP-120, usar subfacetas reais; para 30 questões, usar tendências estimadas
+        const facets = getFacetsByDimension(dimKey, selectedDimension.score);
+        const ipip120Subfacets = isIPIP120 && ipip120?.subfacets
+          ? (ipip120.subfacets as SubfacetScore[]).filter(s => s.dimension === dimKey)
+          : null;
         return (
           <DimensionModalExpandable
             dimension={selectedDimension}
             dimensionKey={dimKey}
-            facets={getFacetsByDimension(dimKey, selectedDimension.score)}
+            facets={facets}
+            ipip120Subfacets={ipip120Subfacets}
             open={modalOpen}
             onOpenChange={setModalOpen}
           />

@@ -1,0 +1,1 @@
+ALTER TABLE `bigfive_profiles` MODIFY COLUMN `ipip120Data` json;

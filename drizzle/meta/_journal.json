@@ -15,6 +15,20 @@
       "when": 1772732318494,
       "tag": "0001_jazzy_donald_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772801120506,
+      "tag": "0002_flawless_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1772801157072,
+      "tag": "0003_nosy_the_hunter",
+      "breakpoints": true
     }
   ]
 }

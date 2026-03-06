@@ -46,6 +46,10 @@ export const bigfiveProfiles = mysqlTable("bigfive_profiles", {
   combinationInsights: json("combinationInsights").$type<string[]>().notNull(),
   /** Recomendações geradas */
   recommendations: json("recommendations").$type<string[]>().notNull(),
+  /** Dados do IPIP-NEO-120 (subfacetas com escores reais) - null para perfis do formulário de 30 questões */
+  ipip120Data: json("ipip120Data"),
+  /** Versão do teste: '30q' ou 'ipip120' */
+  testVersion: varchar("testVersion", { length: 16 }).default('30q'),
   /** Quando o perfil foi salvo no banco */
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

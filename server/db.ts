@@ -112,6 +112,8 @@ export async function upsertBigfiveProfile(profile: InsertBigfiveProfile): Promi
         dimensions: profile.dimensions,
         combinationInsights: profile.combinationInsights,
         recommendations: profile.recommendations,
+        ipip120Data: profile.ipip120Data ?? null,
+        testVersion: profile.testVersion ?? '30q',
         updatedAt: new Date(),
       },
     });

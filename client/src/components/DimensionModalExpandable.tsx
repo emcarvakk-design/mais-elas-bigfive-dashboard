@@ -5,12 +5,14 @@ import { getQuestionsForDimension } from '@/lib/powerfulQuestions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, Info, MessageCircleQuestion } from 'lucide-react';
+import { ChevronDown, Info, MessageCircleQuestion, BarChart2 } from 'lucide-react';
+import { type SubfacetScore } from '@/lib/ipip120';
 
 interface DimensionModalExpandableProps {
   dimension: BigFiveDimension;
   dimensionKey: string;
   facets: Facet[];
+  ipip120Subfacets?: SubfacetScore[] | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -41,6 +43,7 @@ export function DimensionModalExpandable({
   dimension,
   dimensionKey,
   facets,
+  ipip120Subfacets,
   open,
   onOpenChange,
 }: DimensionModalExpandableProps) {
@@ -99,60 +102,140 @@ export function DimensionModalExpandable({
           <div>
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-base font-semibold">Subfacetas</h3>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                <Info className="w-3 h-3" />
-                <span>Tendência estimada com base no escore geral</span>
-              </div>
+              {ipip120Subfacets ? (
+                <div className="flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full">
+                  <BarChart2 className="w-3 h-3" />
+                  <span>Escores reais do IPIP-NEO-120</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                  <Info className="w-3 h-3" />
+                  <span>Tendência estimada com base no escore geral</span>
+                </div>
+              )}
             </div>
-            <div className="space-y-2">
-              {facets.map((facet, idx) => {
-                const tc = tendencyConfig[facet.tendency];
-                return (
-                  <div key={idx}>
-                    <button
-                      onClick={() => setExpandedFacet(expandedFacet === idx ? null : idx)}
-                      className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tc.dot}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm">{facet.name}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{facet.description}</p>
-                        </div>
-                        <Badge className={`text-xs border flex-shrink-0 ${tc.color}`} variant="outline">
-                          {tc.label}
-                        </Badge>
-                      </div>
-                      <ChevronDown
-                        className={`w-4 h-4 ml-2 flex-shrink-0 transition-transform text-muted-foreground ${expandedFacet === idx ? 'rotate-180' : ''}`}
-                      />
-                    </button>
 
-                    {/* Conteúdo Expandido */}
-                    {expandedFacet === idx && (
-                      <Card className="mt-1 p-4 bg-muted/30 border-primary/20 rounded-t-none">
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
-                              <p className="text-xs font-semibold text-emerald-700 mb-1">Quando elevada</p>
-                              <p className="text-xs text-emerald-800 leading-relaxed">{facet.highDescription}</p>
-                            </div>
-                            <div className="p-3 rounded-lg bg-orange-50 border border-orange-100">
-                              <p className="text-xs font-semibold text-orange-700 mb-1">Quando baixa</p>
-                              <p className="text-xs text-orange-800 leading-relaxed">{facet.lowDescription}</p>
+            {/* Exibir subfacetas reais do IPIP-120 */}
+            {ipip120Subfacets ? (
+              <div className="space-y-2">
+                {ipip120Subfacets.map((subfacet, idx) => {
+                  const scoreColor = subfacet.score >= 70 ? '#10b981' : subfacet.score >= 40 ? '#f59e0b' : '#ef4444';
+                  const scoreLabel = subfacet.score >= 70 ? 'Elevada' : subfacet.score >= 40 ? 'Moderada' : 'Baixa';
+                  const scoreBadgeClass = subfacet.score >= 70
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : subfacet.score >= 40
+                    ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                    : 'bg-orange-50 text-orange-700 border-orange-200';
+                  // Encontrar a faceta correspondente para exibir descrições
+                  const facetInfo = facets.find(f => f.name === subfacet.label);
+                  return (
+                    <div key={idx}>
+                      <button
+                        onClick={() => setExpandedFacet(expandedFacet === idx ? null : idx)}
+                        className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: scoreColor }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm">{subfacet.label}</p>
+                            {/* Barra de progresso compacta */}
+                            <div className="mt-1.5 h-1.5 bg-muted rounded-full overflow-hidden w-full max-w-[160px]">
+                              <div
+                                className="h-full rounded-full"
+                                style={{ width: `${subfacet.score}%`, backgroundColor: scoreColor }}
+                              />
                             </div>
                           </div>
-                          <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                            <p className="text-xs font-semibold text-blue-700 mb-1">💡 Dica para o mentoring</p>
-                            <p className="text-xs text-blue-800 leading-relaxed">{facet.mentorNote}</p>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-sm font-bold" style={{ color: scoreColor }}>{subfacet.score}%</span>
+                            <Badge className={`text-xs border ${scoreBadgeClass}`} variant="outline">
+                              {scoreLabel}
+                            </Badge>
                           </div>
                         </div>
-                      </Card>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                        <ChevronDown
+                          className={`w-4 h-4 ml-2 flex-shrink-0 transition-transform text-muted-foreground ${expandedFacet === idx ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {/* Conteúdo Expandido */}
+                      {expandedFacet === idx && facetInfo && (
+                        <Card className="mt-1 p-4 bg-muted/30 border-primary/20 rounded-t-none">
+                          <div className="space-y-3">
+                            <p className="text-xs text-muted-foreground leading-relaxed">{facetInfo.description}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                                <p className="text-xs font-semibold text-emerald-700 mb-1">Quando elevada</p>
+                                <p className="text-xs text-emerald-800 leading-relaxed">{facetInfo.highDescription}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-orange-50 border border-orange-100">
+                                <p className="text-xs font-semibold text-orange-700 mb-1">Quando baixa</p>
+                                <p className="text-xs text-orange-800 leading-relaxed">{facetInfo.lowDescription}</p>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                              <p className="text-xs font-semibold text-blue-700 mb-1">💡 Dica para o mentoring</p>
+                              <p className="text-xs text-blue-800 leading-relaxed">{facetInfo.mentorNote}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Exibir tendências estimadas para perfis de 30 questões */
+              <div className="space-y-2">
+                {facets.map((facet, idx) => {
+                  const tc = tendencyConfig[facet.tendency];
+                  return (
+                    <div key={idx}>
+                      <button
+                        onClick={() => setExpandedFacet(expandedFacet === idx ? null : idx)}
+                        className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${tc.dot}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm">{facet.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{facet.description}</p>
+                          </div>
+                          <Badge className={`text-xs border flex-shrink-0 ${tc.color}`} variant="outline">
+                            {tc.label}
+                          </Badge>
+                        </div>
+                        <ChevronDown
+                          className={`w-4 h-4 ml-2 flex-shrink-0 transition-transform text-muted-foreground ${expandedFacet === idx ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {/* Conteúdo Expandido */}
+                      {expandedFacet === idx && (
+                        <Card className="mt-1 p-4 bg-muted/30 border-primary/20 rounded-t-none">
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                                <p className="text-xs font-semibold text-emerald-700 mb-1">Quando elevada</p>
+                                <p className="text-xs text-emerald-800 leading-relaxed">{facet.highDescription}</p>
+                              </div>
+                              <div className="p-3 rounded-lg bg-orange-50 border border-orange-100">
+                                <p className="text-xs font-semibold text-orange-700 mb-1">Quando baixa</p>
+                                <p className="text-xs text-orange-800 leading-relaxed">{facet.lowDescription}</p>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                              <p className="text-xs font-semibold text-blue-700 mb-1">💡 Dica para o mentoring</p>
+                              <p className="text-xs text-blue-800 leading-relaxed">{facet.mentorNote}</p>
+                            </div>
+                          </div>
+                        </Card>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Interpretação Geral */}

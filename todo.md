@@ -16,3 +16,5 @@
 - [x] App do teste: notificação automática para a Erica ao concluir
 - [x] App do teste: integração com banco de dados (salva perfil direto)
 - [x] App do teste: rota tRPC para submissão do teste
+- [ ] Integrar planilha IPIP-NEO-120 ao dashboard (ID: 1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E)
+- [ ] Criar lógica de cálculo dos 30 escores reais de subfacetas
