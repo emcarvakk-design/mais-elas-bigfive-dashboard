@@ -47,12 +47,28 @@ export function PrintableReport({ profile }: PrintableReportProps) {
             font-size: 11px;
             color: #1a1a2e;
             background: white;
+            orphans: 3;
+            widows: 3;
           }
           .print-page {
             page-break-after: always;
+            break-after: page;
             padding: 0;
           }
-          .print-page:last-child { page-break-after: avoid; }
+          .print-page:last-child {
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+          /* Evitar que títulos de seção fiquem sozinhos no fim da página */
+          .section-title {
+            break-after: avoid;
+            page-break-after: avoid;
+          }
+          /* Evitar que qualquer elemento com conteúdo seja partido */
+          p, li, blockquote {
+            orphans: 3;
+            widows: 3;
+          }
 
           /* ── Cabeçalho ── */
           .report-header {
@@ -123,7 +139,7 @@ export function PrintableReport({ profile }: PrintableReportProps) {
           .radar-pct { width: 36px; text-align: right; font-size: 10px; font-weight: 700; }
 
           /* ── Seções de Facetas ── */
-          .facet-section { margin-bottom: 24px; page-break-inside: avoid; }
+          .facet-section { margin-bottom: 24px; page-break-inside: avoid; break-inside: avoid; }
           .facet-section-title {
             font-size: 12px;
             font-weight: 700;
@@ -139,6 +155,8 @@ export function PrintableReport({ profile }: PrintableReportProps) {
             padding: 10px 12px;
             margin-bottom: 8px;
             page-break-inside: avoid;
+            break-inside: avoid;
+            break-before: avoid-page;
           }
           .facet-card-header {
             display: flex;
@@ -209,6 +227,8 @@ export function PrintableReport({ profile }: PrintableReportProps) {
             margin-bottom: 10px;
             border-radius: 0 6px 6px 0;
             page-break-inside: avoid;
+            break-inside: avoid;
+            break-before: avoid-page;
           }
           .insight-title { font-weight: 700; color: #1e3a8a; font-size: 11px; margin-bottom: 4px; }
           .insight-text { color: #334155; line-height: 1.5; font-size: 10px; }
@@ -221,6 +241,8 @@ export function PrintableReport({ profile }: PrintableReportProps) {
             margin-bottom: 8px;
             border-radius: 0 6px 6px 0;
             page-break-inside: avoid;
+            break-inside: avoid;
+            break-before: avoid-page;
           }
           .combo-card {
             border-left: 3px solid #f59e0b;
@@ -229,12 +251,16 @@ export function PrintableReport({ profile }: PrintableReportProps) {
             margin-bottom: 8px;
             border-radius: 0 6px 6px 0;
             page-break-inside: avoid;
+            break-inside: avoid;
+            break-before: avoid-page;
           }
 
           /* ── Perguntas Poderosas ── */
           .pq-section {
             margin-bottom: 18px;
             page-break-inside: avoid;
+            break-inside: avoid;
+            break-before: avoid-page;
           }
           .pq-header {
             display: flex;

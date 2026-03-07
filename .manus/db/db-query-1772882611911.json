@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, name, email, testVersion FROM bigfive_profiles ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2y4JCFyDezK8aiE.root --database 72F3cyMx3Hc4kQWwGuMs7s --execute SELECT id, name, email, testVersion FROM bigfive_profiles ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "aXNhYmVsYXRhbm51c0BnbWFpbC5jb20",
+      "name": "Isabela Maria Tannus de Souza Leite",
+      "email": "isabelatannus@gmail.com",
+      "testVersion": "30q"
+    },
+    {
+      "id": "bf_ZW1jYXJ2YWtrQGhvdG1haWwuY29t",
+      "name": "Erica carvalho",
+      "email": "emcarvakk@hotmail.com",
+      "testVersion": "30q"
+    },
+    {
+      "id": "bf_aXNhYmVsYXRhbm51c0BnbWFpbC5jb20",
+      "name": "Isabela Maria Tannus de Souza Leite",
+      "email": "isabelatannus@gmail.com",
+      "testVersion": "30q"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\ttestVersion\naXNhYmVsYXRhbm51c0BnbWFpbC5jb20\tIsabela Maria Tannus de Souza Leite\tisabelatannus@gmail.com\t30q\nbf_ZW1jYXJ2YWtrQGhvdG1haWwuY29t\tErica carvalho\temcarvakk@hotmail.com\t30q\nbf_aXNhYmVsYXRhbm51c0BnbWFpbC5jb20\tIsabela Maria Tannus de Souza Leite\tisabelatannus@gmail.com\t30q\n",
+  "stderr": "",
+  "execution_time_ms": 49
+}
