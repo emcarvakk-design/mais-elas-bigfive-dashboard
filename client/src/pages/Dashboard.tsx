@@ -353,6 +353,85 @@ export default function Dashboard() {
               </Card>
             </div>
 
+            {/* Médias das 5 Dimensões */}
+            {profiles.length > 0 && (() => {
+              const dims = DIMENSION_OPTIONS;
+              const avgScores = dims.map(({ key, label, emoji }) => {
+                const total = filteredProfiles.length > 0
+                  ? filteredProfiles.reduce((sum, p) => sum + p.dimensions[key].score, 0) / filteredProfiles.length
+                  : profiles.reduce((sum, p) => sum + p.dimensions[key].score, 0) / profiles.length;
+                return { key, label, emoji, avg: Math.round(total) };
+              });
+              const highest = avgScores.reduce((a, b) => a.avg > b.avg ? a : b);
+              const lowest = avgScores.reduce((a, b) => a.avg < b.avg ? a : b);
+              const colorMap: Record<string, string> = {
+                openness: 'bg-emerald-500',
+                conscientiousness: 'bg-yellow-500',
+                extraversion: 'bg-orange-500',
+                agreeableness: 'bg-green-500',
+                emotionalStability: 'bg-blue-500',
+              };
+              const textColorMap: Record<string, string> = {
+                openness: 'text-emerald-600',
+                conscientiousness: 'text-yellow-600',
+                extraversion: 'text-orange-600',
+                agreeableness: 'text-green-600',
+                emotionalStability: 'text-blue-600',
+              };
+              const bgLightMap: Record<string, string> = {
+                openness: 'bg-emerald-50 border-emerald-200',
+                conscientiousness: 'bg-yellow-50 border-yellow-200',
+                extraversion: 'bg-orange-50 border-orange-200',
+                agreeableness: 'bg-green-50 border-green-200',
+                emotionalStability: 'bg-blue-50 border-blue-200',
+              };
+              return (
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h2 className="text-lg font-semibold">📈 Médias do Grupo</h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {filteredProfiles.length < profiles.length
+                          ? `Baseado em ${filteredProfiles.length} respondente(s) filtrado(s)`
+                          : `Baseado em ${profiles.length} respondente(s)`}
+                      </p>
+                    </div>
+                    <div className="flex gap-3 text-xs">
+                      <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                        ▲ Maior: {highest.emoji} {highest.label} ({highest.avg}%)
+                      </span>
+                      <span className="flex items-center gap-1 text-rose-500 font-medium">
+                        ▼ Menor: {lowest.emoji} {lowest.label} ({lowest.avg}%)
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+                    {avgScores.map(({ key, label, emoji, avg }) => (
+                      <div key={key} className={`rounded-xl border p-4 flex flex-col gap-2 ${bgLightMap[key]}`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xl">{emoji}</span>
+                          <span className={`text-2xl font-bold ${textColorMap[key]}`}>{avg}%</span>
+                        </div>
+                        <p className="text-xs font-medium text-foreground/80 leading-tight">{label}</p>
+                        <div className="w-full bg-white/60 rounded-full h-2 mt-1">
+                          <div
+                            className={`h-2 rounded-full transition-all ${colorMap[key]}`}
+                            style={{ width: `${avg}%` }}
+                          />
+                        </div>
+                        {key === highest.key && (
+                          <span className="text-xs font-semibold text-emerald-600">▲ Mais alta</span>
+                        )}
+                        {key === lowest.key && (
+                          <span className="text-xs font-semibold text-rose-500">▼ Mais baixa</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              );
+            })()}
+
             {/* Barra de busca e filtros */}
             <div className="space-y-3">
               <div className="flex gap-3 items-center">
