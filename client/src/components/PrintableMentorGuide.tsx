@@ -810,6 +810,124 @@ export function PrintableMentorGuide({ profile }: Props) {
             color: #94a3b8;
             text-align: center;
           }
+
+          /* ── Plano de Desenvolvimento ── */
+          .mg-plan-page {
+            page-break-before: always;
+            padding-top: 4px;
+          }
+          .mg-plan-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white;
+            padding: 20px 24px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+          }
+          .mg-plan-header h2 {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0 0 4px;
+          }
+          .mg-plan-header p {
+            font-size: 10px;
+            opacity: 0.8;
+            margin: 0;
+          }
+          .mg-plan-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            page-break-inside: avoid;
+          }
+          .mg-plan-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          .mg-plan-rank {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #1d4ed8;
+            color: white;
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+          .mg-plan-sf-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #1e293b;
+          }
+          .mg-plan-sf-dim {
+            font-size: 9px;
+            color: #64748b;
+            margin-left: auto;
+          }
+          .mg-plan-body {
+            padding: 10px 14px;
+          }
+          .mg-plan-desc {
+            font-size: 9.5px;
+            color: #475569;
+            margin: 0 0 10px;
+            font-style: italic;
+          }
+          .mg-plan-section-title {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #1d4ed8;
+            margin-bottom: 5px;
+          }
+          .mg-plan-actions {
+            list-style: none;
+            margin: 0 0 10px;
+            padding: 0;
+          }
+          .mg-plan-actions li {
+            font-size: 9.5px;
+            color: #334155;
+            padding: 4px 0 4px 16px;
+            position: relative;
+            border-bottom: 1px dashed #f1f5f9;
+            line-height: 1.5;
+          }
+          .mg-plan-actions li:last-child { border-bottom: none; }
+          .mg-plan-actions li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #2563eb;
+            font-weight: 800;
+            font-size: 9px;
+          }
+          .mg-plan-commitment {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-top: 6px;
+          }
+          .mg-plan-commitment-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: #1d4ed8;
+            margin-bottom: 4px;
+          }
+          .mg-plan-commitment-line {
+            border-bottom: 1px solid #93c5fd;
+            height: 18px;
+            margin-bottom: 4px;
+          }
         }
       `}</style>
 
@@ -905,6 +1023,324 @@ export function PrintableMentorGuide({ profile }: Props) {
           </div>
         );
       })}
+
+      {/* ══════════════════════════════════════════════
+          PLANO DE DESENVOLVIMENTO
+      ══════════════════════════════════════════════ */}
+      {(() => {
+        // Coletar todas as subfacetas com seus escores estimados
+        const allSubfacets: { dimKey: string; dimLabel: string; sfName: string; sfDesc: string; score: number }[] = [];
+        DIMENSION_ORDER.forEach(dimKey => {
+          const dim = dimensions[dimKey];
+          const guide = MENTOR_GUIDE[dimKey];
+          if (!dim || !guide) return;
+          const dimScore = Math.round(dim.score);
+          guide.subfacets.forEach((sf, sfIdx) => {
+            const variation = sfIdx % 3 === 0 ? 3 : sfIdx % 3 === 1 ? -3 : 0;
+            const sfScore = Math.min(100, Math.max(5, dimScore + variation));
+            allSubfacets.push({ dimKey, dimLabel: guide.label, sfName: sf.name, sfDesc: sf.description, score: sfScore });
+          });
+        });
+        // Ordenar por escore crescente e pegar as 3 mais baixas
+        const bottom3 = [...allSubfacets].sort((a, b) => a.score - b.score).slice(0, 3);
+
+        // Ações de desenvolvimento por subfaceta
+        const DEV_ACTIONS: Record<string, { actions: string[]; commitment: string }> = {
+          'Ansiedade': {
+            actions: [
+              'Praticar respiração diafragmática por 5 minutos antes de situações de alta pressão',
+              'Criar um "diário de gatilhos" para identificar padrões de ansiedade',
+              'Desenvolver uma frase-âncora pessoal para momentos de escalada ansiosa',
+              'Estabelecer uma rotina de "descompresso" ao final do dia de trabalho',
+            ],
+            commitment: 'Qual é uma ação concreta que você vai tomar esta semana para gerenciar melhor sua ansiedade?'
+          },
+          'Raiva / Hostilidade': {
+            actions: [
+              'Identificar os 3 principais gatilhos de irritação e criar um protocolo de resposta para cada',
+              'Praticar a técnica do "pause de 90 segundos" antes de reagir em conflitos',
+              'Criar um canal de expressão saudável para frustração (exercício, escrita, arte)',
+              'Comunicar descontentamento usando linguagem de "eu sinto" em vez de acusações',
+            ],
+            commitment: 'Em qual situação específica você vai praticar uma resposta diferente esta semana?'
+          },
+          'Depressão / Melancolia': {
+            actions: [
+              'Mapear os períodos de baixa e identificar os padrões que os precedem',
+              'Criar uma lista de "recursos de recuperação" pessoais para usar nos momentos difíceis',
+              'Estabelecer uma rotina mínima de autocuidado que funcione mesmo nos dias ruins',
+              'Identificar uma pessoa de confiança para acionar quando o desnânimo aparecer',
+            ],
+            commitment: 'Qual é um recurso de recuperação que você vai usar ativamente esta semana?'
+          },
+          'Autoconsciência / Vergonha': {
+            actions: [
+              'Praticar o "diário de evidências" — registrar conquistas diárias por escrito',
+              'Identificar a voz crítica interna e dar-lhe um nome para criar distância',
+              'Expor-se a uma situação de vulnerabilidade calculada por semana',
+              'Buscar feedback positivo ativo de pessoas de confiança',
+            ],
+            commitment: 'Qual situação de vulnerabilidade calculada você vai enfrentar esta semana?'
+          },
+          'Impulsividade': {
+            actions: [
+              'Criar uma regra pessoal: decisões acima de X impacto esperam 24 horas',
+              'Implementar um "checklist de pausa" antes de agir em momentos de alta emoção',
+              'Identificar os contextos em que a impulsividade aparece mais e criar alertas',
+              'Praticar a pergunta: "O que eu estou sentindo agora que está me empurrando para agir?"',
+            ],
+            commitment: 'Em qual área específica você vai implementar uma pausa intencional esta semana?'
+          },
+          'Vulnerabilidade ao Estresse': {
+            actions: [
+              'Mapear os sinais físicos e emocionais precoces de sobrecarga',
+              'Criar um "protocolo de crise" com ações concretas para cada nível de estresse',
+              'Estabelecer limites não negociáveis de recuperação (sono, pausas, desconexão)',
+              'Identificar e pedir o suporte específico que precisa em períodos intensos',
+            ],
+            commitment: 'Qual limite de recuperação você vai estabelecer e honrar esta semana?'
+          },
+          'Cordialidade / Calor Social': {
+            actions: [
+              'Praticar expressões verbais de apreciação com pessoas próximas',
+              'Criar rituais de conexão intencional com pessoas importantes',
+              'Aprender a linguagem de amor/apreciação das pessoas-chave na sua vida',
+              'Exercitar o interesse genuíno fazendo perguntas sobre a vida dos outros',
+            ],
+            commitment: 'Com quem você vai praticar uma expressão de calor intencional esta semana?'
+          },
+          'Gregarieda de / Sociabilidade': {
+            actions: [
+              'Identificar o tipo de interação social que energiza versus drena',
+              'Criar oportunidades de conexão em formatos que funcionam para você',
+              'Praticar a presença plena em interações curtas em vez de evitá-las',
+            ],
+            commitment: 'Qual formato de conexão social você vai experimentar esta semana?'
+          },
+          'Assertividade': {
+            actions: [
+              'Identificar uma situação por semana para praticar se posicionar com clareza',
+              'Preparar com antecedência o que quer dizer em situações de alta visibilidade',
+              'Praticar o "não" em situações de baixo risco para construir o músculo',
+              'Usar a fórmula: "Eu penso/sinto/quero" em vez de perguntas indiretas',
+            ],
+            commitment: 'Em qual situação específica você vai se posicionar com mais clareza esta semana?'
+          },
+          'Nível de Atividade': {
+            actions: [
+              'Mapear o ritmo ideal de trabalho e criar uma rotina que o respeite',
+              'Identificar o que drena energia desnecessariamente e eliminar ou delegar',
+              'Criar blocos de "trabalho profundo" protegidos de interrupções',
+            ],
+            commitment: 'Qual ajuste de ritmo você vai implementar esta semana?'
+          },
+          'Busca por Emoção / Excitação': {
+            actions: [
+              'Introduzir uma novidade calculada por semana na rotina profissional',
+              'Criar um projeto paralelo que ofereça estimulação sem comprometer prioridades',
+              'Explorar formas de trazer criatividade para tarefas rotineiras',
+            ],
+            commitment: 'Qual novidade calculada você vai introduzir esta semana?'
+          },
+          'Emoções Positivas': {
+            actions: [
+              'Criar uma prática diária de gratidão específica (não genérica)',
+              'Identificar as atividades que geram mais alegria e aumentar sua frequência',
+              'Mapear o que está drenando energia positiva e criar um plano de mudança',
+              'Cultivar relações que energizam e reduzir exposição a relações que drenam',
+            ],
+            commitment: 'Qual atividade que gera alegria você vai priorizar esta semana?'
+          },
+          'Fantasia / Imaginação': {
+            actions: [
+              'Criar um tempo semanal dedicado a imaginar possibilidades sem julgamento',
+              'Usar técnicas de visualização para explorar cenários futuros',
+              'Documentar ideias criativas antes de avaliá-las',
+            ],
+            commitment: 'Que projeto imaginário você vai começar a explorar esta semana?'
+          },
+          'Estética / Apreciação Artística': {
+            actions: [
+              'Criar um ambiente de trabalho que reflita seus valores estéticos',
+              'Incluir uma experiência estética intencional por semana (música, arte, natureza)',
+            ],
+            commitment: 'Que experiência estética você vai criar para si mesmo esta semana?'
+          },
+          'Sentimentos / Abertura Emocional': {
+            actions: [
+              'Praticar nomear emoções com precisão usando vocabulário emocional ampliado',
+              'Criar espaço para processar emoções antes de agir (journaling, conversa, movimento)',
+              'Explorar como as emoções informam decisões importantes',
+            ],
+            commitment: 'Que prática de abertura emocional você vai experimentar esta semana?'
+          },
+          'Ações / Abertura a Novas Experiências': {
+            actions: [
+              'Fazer uma coisa diferente por semana — pequena, mas fora do padrão',
+              'Dizer sim para um convite que normalmente recusaria',
+              'Explorar uma nova habilidade ou área de conhecimento por 30 dias',
+            ],
+            commitment: 'Qual nova experiência você vai tentar esta semana?'
+          },
+          'Ideias / Curiosidade Intelectual': {
+            actions: [
+              'Dedicar 20 minutos diários para explorar um tema de interesse puro',
+              'Criar o hábito de fazer uma pergunta profunda por dia',
+              'Conectar-se com pessoas que pensam de forma diferente',
+            ],
+            commitment: 'Que tema você vai explorar com curiosidade pura esta semana?'
+          },
+          'Valores / Abertura a Novas Perspectivas': {
+            actions: [
+              'Ler ou ouvir uma perspectiva radicalmente diferente da sua por semana',
+              'Praticar a pergunta: "O que eu poderia estar errado sobre isso?"',
+              'Conversar com alguém que discorda de você sobre um tema importante',
+            ],
+            commitment: 'Que perspectiva diferente você vai explorar com abertura esta semana?'
+          },
+          'Confiança': {
+            actions: [
+              'Mapear as experiências que moldaram seu nível de confiança atual',
+              'Criar critérios claros para decidir em quem confiar em diferentes contextos',
+              'Praticar confiança gradual em relações de baixo risco',
+            ],
+            commitment: 'Em qual relação você vai praticar um passo de confiança esta semana?'
+          },
+          'Franqueza / Honestidade': {
+            actions: [
+              'Praticar dar um feedback honesto e gentil por semana',
+              'Identificar uma verdade que você está evitando dizer e criar um plano para entregá-la',
+              'Usar a fórmula: "Posso ser honesto com você sobre algo?" para criar permissão',
+            ],
+            commitment: 'Qual verdade importante você vai entregar com gentileza esta semana?'
+          },
+          'Altruísmo': {
+            actions: [
+              'Praticar pedir ajuda uma vez por semana — ativamente',
+              'Identificar onde está ajudando por medo e criar um limite saudável',
+              'Criar uma rotina de autocuidado não negociável',
+            ],
+            commitment: 'Qual pedido de ajuda você vai fazer esta semana?'
+          },
+          'Cooperação / Conformidade': {
+            actions: [
+              'Identificar uma situação por semana para discordar de forma construtiva',
+              'Praticar o "não" em situações de baixo risco',
+              'Criar uma lista de limites não negociáveis e comunicar um deles',
+              'Usar a fórmula: "Eu entendo sua perspectiva, e eu penso diferente" em vez de ceder',
+            ],
+            commitment: 'Em qual situação você vai se posicionar em vez de ceder esta semana?'
+          },
+          'Modes tia / Humildade': {
+            actions: [
+              'Praticar receber elogios com "obrigado" em vez de minimizar',
+              'Criar o hábito de compartilhar conquistas com uma pessoa de confiança por semana',
+              'Escrever uma lista de 10 coisas que você faz muito bem',
+              'Praticar se apresentar com confiança em contextos profissionais',
+            ],
+            commitment: 'Como você vai ocupar mais espaço esta semana sem pedir desculpas por isso?'
+          },
+          'Sensibilidade / Empatia': {
+            actions: [
+              'Criar rituais de "descompresso emocional" após interações intensas',
+              'Aprender técnicas de grounding para não absorver a dor dos outros',
+              'Estabelecer limites de disponibilidade emocional',
+              'Praticar a empatia sem assumir a responsabilidade pelo sofrimento alheio',
+            ],
+            commitment: 'Qual ritual de proteção emocional você vai implementar esta semana?'
+          },
+          'Competência / Autoeficácia': {
+            actions: [
+              'Criar um "banco de evidências" de competência — registrar conquistas semanalmente',
+              'Identificar e desafiar a voz do impostor com fatos concretos',
+              'Assumir um projeto desafiador que estique sua zona de conforto',
+              'Buscar feedback positivo ativo de pessoas que observam seu trabalho',
+            ],
+            commitment: 'Que evidência de sua competência você vai registrar esta semana?'
+          },
+          'Ordem / Organização': {
+            actions: [
+              'Criar um sistema mínimo viável de organização para a área mais caótica',
+              'Implementar uma rotina de "reset" semanal (limpar, organizar, planejar)',
+              'Usar uma ferramenta simples de gestão de tarefas por 30 dias',
+            ],
+            commitment: 'Qual sistema de organização você vai implementar esta semana?'
+          },
+          'Senso de Dever / Responsabilidade': {
+            actions: [
+              'Mapear as responsabilidades que está carregando que não são suas',
+              'Praticar delegar uma tarefa por semana sem microgerenciar',
+              'Criar critérios claros para assumir novos compromissos',
+            ],
+            commitment: 'Qual responsabilidade você vai delegar ou soltar esta semana?'
+          },
+          'Busca por Realizações': {
+            actions: [
+              'Revisar se seus objetivos atuais são seus ou herdados de expectativas externas',
+              'Criar um ritual de celebração para cada meta atingida antes de partir para a próxima',
+              'Definir o que é "bom o suficiente" para projetos de médio impacto',
+            ],
+            commitment: 'Que conquista você vai celebrar genuinamente esta semana?'
+          },
+          'Autodisciplina': {
+            actions: [
+              'Criar um hábito-âncora: vincular a nova prática a algo já consolidado',
+              'Reduzir o tamanho da ação até que seja irresistível (método 2 minutos)',
+              'Eliminar fricção do ambiente para facilitar o comportamento desejado',
+              'Criar um sistema de accountability com alguém de confiança',
+            ],
+            commitment: 'Qual hábito mínimo você vai começar esta semana?'
+          },
+          'Deliberação / Prudência': {
+            actions: [
+              'Criar critérios de decisão antecipados para os tipos de escolha mais comuns',
+              'Estabelecer prazos de decisão para evitar análise infinita',
+              'Praticar decisões rápidas em situações de baixo risco para treinar o músculo',
+            ],
+            commitment: 'Qual decisão que você está adiando você vai tomar esta semana?'
+          },
+        };
+
+        return (
+          <div className="mg-plan-page">
+            <div className="mg-plan-header">
+              <h2>🎯 Plano de Desenvolvimento</h2>
+              <p>As 3 subfacetas com maior potencial de crescimento para {profile.name}</p>
+            </div>
+
+            {bottom3.map((sf, idx) => {
+              const devData = DEV_ACTIONS[sf.sfName] || {
+                actions: ['Explorar esta área com curiosidade e sem julgamento', 'Identificar padrões e gatilhos relacionados a esta subfaceta', 'Criar uma prática intencional de desenvolvimento por 30 dias'],
+                commitment: 'Qual é uma ação concreta que você vai tomar esta semana nesta área?'
+              };
+              return (
+                <div key={idx} className="mg-plan-card">
+                  <div className="mg-plan-card-header">
+                    <div className="mg-plan-rank">{idx + 1}</div>
+                    <div className="mg-plan-sf-name">{sf.sfName}</div>
+                    <div className="mg-plan-sf-dim">{sf.dimLabel} · Escore estimado: ~{sf.score}%</div>
+                  </div>
+                  <div className="mg-plan-body">
+                    <p className="mg-plan-desc">{sf.sfDesc}</p>
+                    <div className="mg-plan-section-title">✅ Ações concretas de desenvolvimento</div>
+                    <ul className="mg-plan-actions">
+                      {devData.actions.map((action, ai) => (
+                        <li key={ai}>{action}</li>
+                      ))}
+                    </ul>
+                    <div className="mg-plan-commitment">
+                      <div className="mg-plan-commitment-label">📝 Compromisso da sessão</div>
+                      <div style={{ fontSize: '9px', color: '#1d4ed8', marginBottom: '6px', fontStyle: 'italic' }}>{devData.commitment}</div>
+                      <div className="mg-plan-commitment-line" />
+                      <div className="mg-plan-commitment-line" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       <div className="mg-footer">
         Guia de uso exclusivo da mentora — Big Five Dashboard &nbsp;·&nbsp; Gerado em {new Date().toLocaleDateString('pt-BR')}
