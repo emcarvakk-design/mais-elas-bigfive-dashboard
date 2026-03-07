@@ -144,22 +144,28 @@ function emailToId30(email: string): string {
 // ─── Lógica IPIP-120 ──────────────────────────────────────────────────────────
 
 // Mapeamento: posição na planilha → posição sequencial Q1-Q120
-// A planilha agrupa por dimensão: N(0-23), E(24-47), O(48-71), A(72-95), C(96-119)
-// Cada grupo tem 24 questões em saltos de 5: Q1,Q6,Q11,...,Q116 para N
+// O novo formulário agrupa as questões em blocos sequenciais por dimensão:
+// Parte 1: Estabilidade Emocional (N) — colunas 0-23  → questões Q1,Q6,Q11,...,Q116 (idx 0,5,10,...,115)
+// Parte 2: Extroversão (E)           — colunas 24-47 → questões Q2,Q7,Q12,...,Q117 (idx 1,6,11,...,116)
+// Parte 3: Abertura (O)              — colunas 48-71 → questões Q3,Q8,Q13,...,Q118 (idx 2,7,12,...,117)
+// Parte 4: Conscienciosidade (C)     — colunas 72-95 → questões Q5,Q10,Q15,...,Q120 (idx 4,9,14,...,119)
+// Parte 5: Agradabilidade (A)        — colunas 96-119→ questões Q4,Q9,Q14,...,Q119 (idx 3,8,13,...,118)
+// Dentro de cada bloco, as questões são agrupadas por subfaceta (4 questões cada)
 const COLUMN_ORDER: number[] = (() => {
   const order = new Array(120).fill(0);
-  // Dimensão N: questões Q1,Q6,Q11,...,Q116 (idx 0,5,10,...,115)
+  // Dimensão N (Estabilidade Emocional): questões Q1,Q6,Q11,...,Q116 (idx 0,5,10,...,115)
   const N_qs = Array.from({ length: 24 }, (_, i) => i * 5);
-  // Dimensão E: questões Q2,Q7,Q12,...,Q117 (idx 1,6,11,...,116)
+  // Dimensão E (Extroversão): questões Q2,Q7,Q12,...,Q117 (idx 1,6,11,...,116)
   const E_qs = Array.from({ length: 24 }, (_, i) => i * 5 + 1);
-  // Dimensão O: questões Q3,Q8,Q13,...,Q118 (idx 2,7,12,...,117)
+  // Dimensão O (Abertura): questões Q3,Q8,Q13,...,Q118 (idx 2,7,12,...,117)
   const O_qs = Array.from({ length: 24 }, (_, i) => i * 5 + 2);
-  // Dimensão A: questões Q4,Q9,Q14,...,Q119 (idx 3,8,13,...,118)
-  const A_qs = Array.from({ length: 24 }, (_, i) => i * 5 + 3);
-  // Dimensão C: questões Q5,Q10,Q15,...,Q120 (idx 4,9,14,...,119)
+  // Dimensão C (Conscienciosidade): questões Q5,Q10,Q15,...,Q120 (idx 4,9,14,...,119)
   const C_qs = Array.from({ length: 24 }, (_, i) => i * 5 + 4);
+  // Dimensão A (Agradabilidade): questões Q4,Q9,Q14,...,Q119 (idx 3,8,13,...,118)
+  const A_qs = Array.from({ length: 24 }, (_, i) => i * 5 + 3);
 
-  const sheetOrder = [...N_qs, ...E_qs, ...O_qs, ...A_qs, ...C_qs];
+  // Nova ordem do formulário: N, E, O, C, A (Parte 4=Conscienciosidade, Parte 5=Agradabilidade)
+  const sheetOrder = [...N_qs, ...E_qs, ...O_qs, ...C_qs, ...A_qs];
   for (let sheetPos = 0; sheetPos < 120; sheetPos++) {
     order[sheetOrder[sheetPos]] = sheetPos;
   }
@@ -319,8 +325,8 @@ async function sync30q(): Promise<{ saved: number; errors: number }> {
 }
 
 async function syncIPIP120(): Promise<{ saved: number; errors: number }> {
-  const SHEET_ID = '1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E';
-  const GID = '1081644880';
+  const SHEET_ID = '1gnBms78OFB2AqMjVjHSuZaT-Kg0qYqGmomPAWjDpWxI';
+  const GID = '1030652843';
   const csv = await fetchSheet(SHEET_ID, GID);
 
   const lines = csv.split('\n').filter(l => l.trim());
