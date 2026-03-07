@@ -4,10 +4,11 @@ import { DimensionModalExpandable } from '@/components/DimensionModalExpandable'
 import { PrintableReport } from '@/components/PrintableReport';
 import { PrintableReportSummary } from '@/components/PrintableReportSummary';
 import { PrintablePowerfulQuestions } from '@/components/PrintablePowerfulQuestions';
+import { PrintableMentorGuide } from '@/components/PrintableMentorGuide';
 import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText, HelpCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText, HelpCircle, BookOpen } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
@@ -123,6 +124,19 @@ export default function ProfileDetail() {
             >
               <HelpCircle className="w-4 h-4" />
               Perguntas Poderosas
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                document.body.classList.add('print-mentor-guide-mode');
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-mentor-guide-mode'), 1000);
+              }}
+              className="flex items-center gap-2 border-indigo-400 text-indigo-700 hover:bg-indigo-50"
+            >
+              <BookOpen className="w-4 h-4" />
+              Guia da Mentora
             </Button>
           </div>
         </div>
@@ -343,6 +357,8 @@ export default function ProfileDetail() {
       <PrintableReportSummary profile={profile} />
       {/* PDF de Perguntas Poderosas */}
       <PrintablePowerfulQuestions profile={profile} />
+      {/* Guia da Mentora */}
+      <PrintableMentorGuide profile={profile} />
     </div>
   );
 }
