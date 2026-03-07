@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { startSyncScheduler, runSync } from "../syncJob";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,6 +36,17 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Endpoint de sincronização manual (acionado pelo botão "Sincronizar" ou por você)
+  app.post('/api/sync-now', async (_req, res) => {
+    try {
+      const result = await runSync();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ success: false, message: String(error) });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
@@ -59,6 +71,8 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    // Inicia o agendador de sincronização automática diária (06:00 Brasília)
+    startSyncScheduler();
   });
 }
 

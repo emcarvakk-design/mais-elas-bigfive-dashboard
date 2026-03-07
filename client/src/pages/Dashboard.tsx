@@ -164,19 +164,27 @@ export default function Dashboard() {
     syncFromIPIP120(false); // Silencioso na carga inicial
   }, []);
 
-  // Sincronização automática a cada 5 minutos
-  useEffect(() => {
-    if (!autoSyncEnabled) return;
-    const interval = setInterval(() => {
-      syncFromSheets(false);
-      syncFromIPIP120(false);
-    }, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [autoSyncEnabled]);
+  // Sincronização manual via endpoint do servidor (mais robusta que parsear no browser)
+  const [serverSyncing, setServerSyncing] = useState(false);
 
-  const handleManualSync = () => {
-    syncFromSheets(true);
-    syncFromIPIP120(true);
+  const handleManualSync = async () => {
+    setServerSyncing(true);
+    setSyncError(null);
+    setIpip120SyncError(null);
+    try {
+      const res = await fetch('/api/sync-now', { method: 'POST' });
+      const result = await res.json() as { success: boolean; message: string };
+      if (result.success) {
+        await utils.profiles.list.invalidate();
+        toast.success(`✅ Sincronização concluída: ${result.message}`);
+      } else {
+        toast.error(`Erro na sincronização: ${result.message}`);
+      }
+    } catch (err) {
+      toast.error('Erro ao conectar ao servidor para sincronizar.');
+    } finally {
+      setServerSyncing(false);
+    }
   };
 
   // ─── Quando um arquivo é importado manualmente, salvar no banco ──────────
@@ -228,7 +236,7 @@ export default function Dashboard() {
     return true;
   });
 
-  const isLoading = dbLoading || sheetLoading || ipip120Loading || upsertBatch.isPending;
+  const isLoading = dbLoading || sheetLoading || ipip120Loading || upsertBatch.isPending || serverSyncing;
 
   return (
     <div className="min-h-screen bg-background">
