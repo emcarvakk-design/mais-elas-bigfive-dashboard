@@ -30,10 +30,11 @@ export function PrintableReport({ profile }: PrintableReportProps) {
   const professionalInsights = generateProfessionalInsights(profile);
   const isIPIP120 = profile.testVersion === 'ipip120' && !!profile.ipip120Data?.subfacets?.length;
   const ipip120 = profile.ipip120Data;
-  const totalPages = isIPIP120 ? 6 : 5;
+  // Páginas: 1 (capa) + 5 (dimensões) + 3 (profissional, recomendações, perguntas) + 1 opcional (IPIP-120)
+  const totalPages = isIPIP120 ? 10 : 9;
 
   return (
-    <div className="hidden print:block">
+    <div className="hidden print:block" id="print-report-container">
       <style>{`
         @page {
           size: A4;
@@ -364,77 +365,102 @@ export function PrintableReport({ profile }: PrintableReportProps) {
       </div>
 
       {/* ══════════════════════════════════════════════
-          PÁGINA 2 — Facetas Detalhadas
+          PÁGINAS 2–6 — Uma página por dimensão
       ══════════════════════════════════════════════ */}
-      <div className="print-page">
-        <div className="report-header">
-          <h1>Análise Detalhada das Facetas</h1>
-          <p className="subtitle">{profile.name} — Subfacetas de cada dimensão</p>
-        </div>
-
-        {Object.entries(dimensions).map(([key, dimension]) => {
-          const facets = getFacetsByDimension(key, dimension.score);
-          const color = DIMENSION_COLORS[key] || '#6366f1';
-          return (
-            <div key={key} className="facet-section">
-              <div className="facet-section-title" style={{ backgroundColor: color }}>
-                {dimension.emoji} {dimension.label} — {Math.round(dimension.score)}% ({CLASSIFICATION_LABELS[dimension.classification]})
-              </div>
-              {facets.map((facet, idx) => {
-                const tendencyLabel =
-                  facet.tendency === 'elevada' ? 'Tende a ser elevada'
-                  : facet.tendency === 'moderada' ? 'Tendência moderada'
-                  : 'Tende a ser baixa';
-                const tendencyColor =
-                  facet.tendency === 'elevada' ? '#059669'
-                  : facet.tendency === 'moderada' ? '#d97706'
-                  : '#dc2626';
-                const tendencyBg =
-                  facet.tendency === 'elevada' ? '#f0fdf4'
-                  : facet.tendency === 'moderada' ? '#fffbeb'
-                  : '#fef2f2';
-                const tendencyBorder =
-                  facet.tendency === 'elevada' ? '#86efac'
-                  : facet.tendency === 'moderada' ? '#fde68a'
-                  : '#fca5a5';
-                return (
-                  <div key={idx} className="facet-card">
-                    <div className="facet-card-header">
-                      <span className="facet-card-name">{facet.name}</span>
-                      <span
-                        className="facet-card-tendency"
-                        style={{ color: tendencyColor, backgroundColor: tendencyBg, borderColor: tendencyBorder }}
-                      >
-                        {tendencyLabel}
-                      </span>
-                    </div>
-                    <div className="facet-card-desc">{facet.description}</div>
-                    <div className="facet-when-grid">
-                      <div className="facet-when-high">
-                        <div className="facet-when-label" style={{ color: '#059669' }}>Quando elevada</div>
-                        <div className="facet-when-text" style={{ color: '#065f46' }}>{facet.highDescription}</div>
-                      </div>
-                      <div className="facet-when-low">
-                        <div className="facet-when-label" style={{ color: '#c2410c' }}>Quando baixa</div>
-                        <div className="facet-when-text" style={{ color: '#7c2d12' }}>{facet.lowDescription}</div>
-                      </div>
-                    </div>
-                    {facet.mentorNote && (
-                      <div className="facet-mentor-note">
-                        💡 Mentoring: {facet.mentorNote}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+      {Object.entries(dimensions).map(([key, dimension], dimIdx) => {
+        const facets = getFacetsByDimension(key, dimension.score);
+        const color = DIMENSION_COLORS[key] || '#6366f1';
+        const pageNum = dimIdx + 2;
+        const baseScore = dimension.score;
+        return (
+          <div key={key} className="print-page">
+            <div className="report-header" style={{ background: `linear-gradient(135deg, ${color}bb 0%, ${color} 100%)` }}>
+              <h1>{dimension.emoji} {dimension.label}</h1>
+              <p className="subtitle">{profile.name} — Subfacetas detalhadas</p>
+              <p className="meta">
+                Escore geral: {Math.round(dimension.score)}% — {CLASSIFICATION_LABELS[dimension.classification]}
+                &nbsp;| Tendência estimada com base no escore da dimensão
+              </p>
             </div>
-          );
-        })}
 
-        <div className="report-footer">
-          Relatório confidencial gerado pelo Big Five Dashboard — Página 2 de {totalPages}
-        </div>
-      </div>
+            {/* Barra de escore geral da dimensão */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94a3b8', marginBottom: '3px' }}>
+                <span>Baixo</span><span>Moderado</span><span>Elevado</span>
+              </div>
+              <div style={{ height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
+                <div style={{ width: `${dimension.score}%`, height: '100%', backgroundColor: color, borderRadius: '5px' }} />
+              </div>
+            </div>
+
+            {facets.map((facet, idx) => {
+              const estimatedScore = Math.min(100, Math.max(5, Math.round(baseScore + (idx % 2 === 0 ? 2 : -2))));
+              const tendencyLabel =
+                facet.tendency === 'elevada' ? 'Tende a ser elevada'
+                : facet.tendency === 'moderada' ? 'Tendência moderada'
+                : 'Tende a ser baixa';
+              const tendencyColor =
+                facet.tendency === 'elevada' ? '#059669'
+                : facet.tendency === 'moderada' ? '#d97706'
+                : '#dc2626';
+              const tendencyBg =
+                facet.tendency === 'elevada' ? '#f0fdf4'
+                : facet.tendency === 'moderada' ? '#fffbeb'
+                : '#fef2f2';
+              const tendencyBorder =
+                facet.tendency === 'elevada' ? '#86efac'
+                : facet.tendency === 'moderada' ? '#fde68a'
+                : '#fca5a5';
+              const barColor =
+                facet.tendency === 'elevada' ? '#059669'
+                : facet.tendency === 'moderada' ? '#d97706'
+                : '#dc2626';
+              return (
+                <div key={idx} className="facet-card">
+                  <div className="facet-card-header">
+                    <span className="facet-card-name">{facet.name}</span>
+                    <span
+                      className="facet-card-tendency"
+                      style={{ color: tendencyColor, backgroundColor: tendencyBg, borderColor: tendencyBorder }}
+                    >
+                      {tendencyLabel}
+                    </span>
+                  </div>
+                  {/* Barra de progresso estimada */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <div style={{ flex: 1, height: '5px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ width: `${estimatedScore}%`, height: '100%', backgroundColor: barColor, borderRadius: '3px' }} />
+                    </div>
+                    <span style={{ fontSize: '9px', fontWeight: '700', color: barColor, minWidth: '36px', textAlign: 'right' }}>
+                      ~{estimatedScore}%
+                    </span>
+                  </div>
+                  <div className="facet-card-desc">{facet.description}</div>
+                  <div className="facet-when-grid">
+                    <div className="facet-when-high">
+                      <div className="facet-when-label" style={{ color: '#059669' }}>Quando elevada</div>
+                      <div className="facet-when-text" style={{ color: '#065f46' }}>{facet.highDescription}</div>
+                    </div>
+                    <div className="facet-when-low">
+                      <div className="facet-when-label" style={{ color: '#c2410c' }}>Quando baixa</div>
+                      <div className="facet-when-text" style={{ color: '#7c2d12' }}>{facet.lowDescription}</div>
+                    </div>
+                  </div>
+                  {facet.mentorNote && (
+                    <div className="facet-mentor-note">
+                      💡 Mentoring: {facet.mentorNote}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            <div className="report-footer">
+              Relatório confidencial gerado pelo Big Five Dashboard — Página {pageNum} de {totalPages}
+            </div>
+          </div>
+        );
+      })}
 
       {/* ══════════════════════════════════════════════
           PÁGINA 3 — Análise Profissional

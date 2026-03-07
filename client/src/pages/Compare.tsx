@@ -134,13 +134,14 @@ function SubfacetComparisonTable({ profiles }: { profiles: BigFiveProfile[] }) {
         <p className="font-medium">Comparação de subfacetas requer</p>
         <p className="text-sm mt-1">pelo menos 2 perfis com dados IPIP-NEO-120 selecionados</p>
         <p className="text-xs mt-2 text-muted-foreground/60">
-          {ipip120Profiles.length === 1 ? '1 perfil IPIP-120 selecionado — selecione mais 1' : 'Nenhum perfil IPIP-120 selecionado'}
+          {ipip120Profiles.length === 1
+            ? '1 perfil IPIP-120 selecionado — selecione mais 1'
+            : 'Nenhum perfil IPIP-120 selecionado'}
         </p>
       </div>
     );
   }
 
-  // Coletar todas as subfacetas únicas
   const allSubfacetKeys = Array.from(
     new Set(ipip120Profiles.flatMap(p => p.ipip120Data!.subfacets.map((s: IPIP120SubfacetScore) => s.key)))
   );
@@ -278,7 +279,7 @@ export default function Compare() {
                     Nenhum respondente disponível
                   </p>
                 ) : (
-                  profiles.map((p, i) => {
+                  profiles.map((p) => {
                     const isSelected = selectedIds.includes(p.id);
                     const colorIdx = selectedIds.indexOf(p.id);
                     return (
@@ -353,136 +354,138 @@ export default function Compare() {
                   </button>
                 </div>
 
+                {/* Aba Dimensões */}
                 {activeTab === 'dimensions' && (
-                <>
-                {/* Radar Sobreposto */}
-                <Card className="p-6">
-                  <h2 className="font-semibold mb-1">Radar Comparativo</h2>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Sobreposição das 5 dimensões de personalidade
-                  </p>
-                  <ComparisonRadar profiles={selectedProfiles} />
-                </Card>
+                  <div className="space-y-6">
+                    {/* Radar Sobreposto */}
+                    <Card className="p-6">
+                      <h2 className="font-semibold mb-1">Radar Comparativo</h2>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Sobreposição das 5 dimensões de personalidade
+                      </p>
+                      <ComparisonRadar profiles={selectedProfiles} />
+                    </Card>
 
-                {/* Tabela Comparativa */}
-                <Card className="p-6">
-                  <h2 className="font-semibold mb-4">Comparação por Dimensão</h2>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground">
-                            Dimensão
-                          </th>
-                          {selectedProfiles.map((p, i) => (
-                            <th
-                              key={p.id}
-                              className="text-center py-2 px-3 font-medium"
-                              style={{ color: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
-                            >
-                              <div className="flex items-center justify-center gap-1">
-                                <div
-                                  className="w-2 h-2 rounded-full"
-                                  style={{ backgroundColor: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
-                                />
-                                <span className="truncate max-w-[80px]">
-                                  {p.name.split(' ')[0]}
-                                </span>
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {DIMENSION_KEYS.map(({ key, label, emoji }) => (
-                          <tr key={key} className="border-b last:border-0 hover:bg-muted/30">
-                            <td className="py-3 pr-4">
-                              <span className="mr-2">{emoji}</span>
-                              <span className="font-medium">{label}</span>
-                            </td>
-                            {selectedProfiles.map((p, i) => {
-                              const dim = p.dimensions[key as DimensionKey];
-                              const score = Math.round(dim.score);
-                              const color =
-                                score >= 70
-                                  ? '#10b981'
-                                  : score >= 40
-                                  ? '#f59e0b'
-                                  : '#ef4444';
-                              return (
-                                <td key={p.id} className="py-3 px-3 text-center">
-                                  <div className="flex flex-col items-center gap-1">
-                                    <span className="font-bold" style={{ color }}>
-                                      {score}%
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {classificationLabel[dim.classification]}
+                    {/* Tabela Comparativa */}
+                    <Card className="p-6">
+                      <h2 className="font-semibold mb-4">Comparação por Dimensão</h2>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left py-2 pr-4 font-medium text-muted-foreground">
+                                Dimensão
+                              </th>
+                              {selectedProfiles.map((p, i) => (
+                                <th
+                                  key={p.id}
+                                  className="text-center py-2 px-3 font-medium"
+                                  style={{ color: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
+                                >
+                                  <div className="flex items-center justify-center gap-1">
+                                    <div
+                                      className="w-2 h-2 rounded-full"
+                                      style={{ backgroundColor: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
+                                    />
+                                    <span className="truncate max-w-[80px]">
+                                      {p.name.split(' ')[0]}
                                     </span>
                                   </div>
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {DIMENSION_KEYS.map(({ key, label, emoji }) => (
+                              <tr key={key} className="border-b last:border-0 hover:bg-muted/30">
+                                <td className="py-3 pr-4">
+                                  <span className="mr-2">{emoji}</span>
+                                  <span className="font-medium">{label}</span>
                                 </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
+                                {selectedProfiles.map((p, i) => {
+                                  const dim = p.dimensions[key as DimensionKey];
+                                  const score = Math.round(dim.score);
+                                  const color =
+                                    score >= 70
+                                      ? '#10b981'
+                                      : score >= 40
+                                      ? '#f59e0b'
+                                      : '#ef4444';
+                                  return (
+                                    <td key={p.id} className="py-3 px-3 text-center">
+                                      <div className="flex flex-col items-center gap-1">
+                                        <span className="font-bold" style={{ color }}>
+                                          {score}%
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                          {classificationLabel[dim.classification]}
+                                        </span>
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Card>
 
-                {/* Destaques por Respondente */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedProfiles.map((p, i) => {
-                    const dims = Object.entries(p.dimensions) as [DimensionKey, typeof p.dimensions.openness][];
-                    const strongest = dims.reduce((a, b) => (a[1].score > b[1].score ? a : b));
-                    const weakest = dims.reduce((a, b) => (a[1].score < b[1].score ? a : b));
-                    return (
-                      <Card
-                        key={p.id}
-                        className="p-4 border-l-4"
-                        style={{ borderLeftColor: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
-                      >
-                        <div className="flex items-center gap-2 mb-3">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
-                          />
-                          <h3 className="font-semibold truncate">{p.name}</h3>
-                          <button
-                            onClick={() => toggleProfile(p.id)}
-                            className="ml-auto text-muted-foreground hover:text-destructive"
+                    {/* Destaques por Respondente */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedProfiles.map((p, i) => {
+                        const dims = Object.entries(p.dimensions) as [DimensionKey, typeof p.dimensions.openness][];
+                        const strongest = dims.reduce((a, b) => (a[1].score > b[1].score ? a : b));
+                        const weakest = dims.reduce((a, b) => (a[1].score < b[1].score ? a : b));
+                        return (
+                          <Card
+                            key={p.id}
+                            className="p-4 border-l-4"
+                            style={{ borderLeftColor: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
                           >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Traço mais forte:</span>
-                            <span className="font-medium text-emerald-600">
-                              {strongest[1].emoji} {strongest[1].label} ({Math.round(strongest[1].score)}%)
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Traço mais baixo:</span>
-                            <span className="font-medium text-amber-600">
-                              {weakest[1].emoji} {weakest[1].label} ({Math.round(weakest[1].score)}%)
-                            </span>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full mt-2"
-                            onClick={() => setLocation(`/profile/${p.id}`)}
-                          >
-                            Ver Perfil Completo
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-                </>
+                            <div className="flex items-center gap-2 mb-3">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: PROFILE_COLORS[i % PROFILE_COLORS.length] }}
+                              />
+                              <h3 className="font-semibold truncate">{p.name}</h3>
+                              <button
+                                onClick={() => toggleProfile(p.id)}
+                                className="ml-auto text-muted-foreground hover:text-destructive"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Traço mais forte:</span>
+                                <span className="font-medium text-emerald-600">
+                                  {strongest[1].emoji} {strongest[1].label} ({Math.round(strongest[1].score)}%)
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Traço mais baixo:</span>
+                                <span className="font-medium text-amber-600">
+                                  {weakest[1].emoji} {weakest[1].label} ({Math.round(weakest[1].score)}%)
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full mt-2"
+                                onClick={() => setLocation(`/profile/${p.id}`)}
+                              >
+                                Ver Perfil Completo
+                              </Button>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
 
+                {/* Aba Subfacetas IPIP-120 */}
                 {activeTab === 'subfacets' && (
                   <Card className="p-6">
                     <h2 className="font-semibold mb-1">Comparação de Subfacetas IPIP-NEO-120</h2>

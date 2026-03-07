@@ -2,10 +2,11 @@ import { useState, useMemo } from 'react';
 import { DimensionCardClickable } from '@/components/DimensionCardClickable';
 import { DimensionModalExpandable } from '@/components/DimensionModalExpandable';
 import { PrintableReport } from '@/components/PrintableReport';
+import { PrintableReportSummary } from '@/components/PrintableReportSummary';
 import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
@@ -95,6 +96,19 @@ export default function ProfileDetail() {
             >
               <Download className="w-4 h-4" />
               Baixar PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                document.body.classList.add('print-summary-mode');
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-summary-mode'), 1000);
+              }}
+              className="flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Resumo (2 pág.)
             </Button>
           </div>
         </div>
@@ -309,8 +323,10 @@ export default function ProfileDetail() {
         );
       })()}
 
-      {/* Relatório Imprimível */}
+      {/* Relatório Imprimível Completo */}
       <PrintableReport profile={profile} />
+      {/* Relatório Resumido (2 páginas) */}
+      <PrintableReportSummary profile={profile} />
     </div>
   );
 }
