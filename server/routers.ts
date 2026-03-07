@@ -9,6 +9,7 @@ import {
   getAllBigfiveProfiles,
   deleteBigfiveProfile,
   deleteAllBigfiveProfiles,
+  deduplicateProfiles,
 } from "./db";
 
 // ─── Zod schema para uma dimensão Big Five ───────────────────────────────────
@@ -108,6 +109,12 @@ export const appRouter = router({
       .mutation(async () => {
         await deleteAllBigfiveProfiles();
         return { success: true };
+      }),
+    /** Remove duplicatas mantendo o perfil mais completo (IPIP-120 > 30q) */
+    deduplicate: publicProcedure
+      .mutation(async () => {
+        const result = await deduplicateProfiles();
+        return { success: true, ...result };
       }),
   }),
 

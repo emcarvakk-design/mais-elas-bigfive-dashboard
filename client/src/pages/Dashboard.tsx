@@ -62,6 +62,18 @@ export default function Dashboard() {
     onSuccess: () => utils.profiles.list.invalidate(),
   });
 
+  const deduplicateMutation = trpc.profiles.deduplicate.useMutation({
+    onSuccess: (result) => {
+      utils.profiles.list.invalidate();
+      if (result.removed > 0 || result.normalized > 0) {
+        toast.success(`Deduplicação concluída: ${result.removed} duplicata(s) removida(s), ${result.normalized} ID(s) normalizado(s).`);
+      } else {
+        toast.info('Nenhuma duplicata encontrada. Tudo limpo!');
+      }
+    },
+    onError: () => toast.error('Erro ao remover duplicatas.'),
+  });
+
   // Converter os dados do banco para BigFiveProfile
   const profiles: BigFiveProfile[] = dbProfiles as unknown as BigFiveProfile[];
 
@@ -345,6 +357,16 @@ export default function Dashboard() {
                 >
                   <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-bounce' : ''}`} />
                   {isExporting ? `Exportando... ${progress}%` : `Exportar ${filteredProfiles.length} PDF(s)`}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => deduplicateMutation.mutate()}
+                  disabled={deduplicateMutation.isPending}
+                  className="w-full"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${deduplicateMutation.isPending ? 'animate-spin' : ''}`} />
+                  {deduplicateMutation.isPending ? 'Removendo...' : 'Remover Duplicatas'}
                 </Button>
                 <Button variant="destructive" size="sm" onClick={handleClearData} disabled={deleteAllMutation.isPending} className="w-full">
                   <Trash2 className="w-4 h-4 mr-2" />
