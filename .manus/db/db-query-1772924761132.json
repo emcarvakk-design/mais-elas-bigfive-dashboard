@@ -1,0 +1,18 @@
+{
+  "query": "SELECT name, JSON_EXTRACT(dimensions, '$.openness.score') as openness, JSON_EXTRACT(dimensions, '$.conscientiousness.score') as conscientiousness, JSON_EXTRACT(dimensions, '$.extraversion.score') as extraversion, JSON_EXTRACT(dimensions, '$.agreeableness.score') as agreeableness, JSON_EXTRACT(dimensions, '$.emotionalStability.score') as emotionalStability FROM bigfive_profiles WHERE email = 'emcarvakk@hotmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2y4JCFyDezK8aiE.root --database 72F3cyMx3Hc4kQWwGuMs7s --execute SELECT name, JSON_EXTRACT(dimensions, '$.openness.score') as openness, JSON_EXTRACT(dimensions, '$.conscientiousness.score') as conscientiousness, JSON_EXTRACT(dimensions, '$.extraversion.score') as extraversion, JSON_EXTRACT(dimensions, '$.agreeableness.score') as agreeableness, JSON_EXTRACT(dimensions, '$.emotionalStability.score') as emotionalStability FROM bigfive_profiles WHERE email = 'emcarvakk@hotmail.com';",
+  "rows": [
+    {
+      "name": "Erica carvalho",
+      "openness": "83",
+      "conscientiousness": "87",
+      "extraversion": "80",
+      "agreeableness": "87",
+      "emotionalStability": "67"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\topenness\tconscientiousness\textraversion\tagreeableness\temotionalStability\nErica carvalho\t83\t87\t80\t87\t67\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

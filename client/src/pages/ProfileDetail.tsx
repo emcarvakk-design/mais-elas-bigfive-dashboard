@@ -3,10 +3,11 @@ import { DimensionCardClickable } from '@/components/DimensionCardClickable';
 import { DimensionModalExpandable } from '@/components/DimensionModalExpandable';
 import { PrintableReport } from '@/components/PrintableReport';
 import { PrintableReportSummary } from '@/components/PrintableReportSummary';
+import { PrintablePowerfulQuestions } from '@/components/PrintablePowerfulQuestions';
 import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText, HelpCircle } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
@@ -109,6 +110,19 @@ export default function ProfileDetail() {
             >
               <FileText className="w-4 h-4" />
               Resumo (2 pág.)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                document.body.classList.add('print-powerful-mode');
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-powerful-mode'), 1000);
+              }}
+              className="flex items-center gap-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+            >
+              <HelpCircle className="w-4 h-4" />
+              Perguntas Poderosas
             </Button>
           </div>
         </div>
@@ -327,6 +341,8 @@ export default function ProfileDetail() {
       <PrintableReport profile={profile} />
       {/* Relatório Resumido (2 páginas) */}
       <PrintableReportSummary profile={profile} />
+      {/* PDF de Perguntas Poderosas */}
+      <PrintablePowerfulQuestions profile={profile} />
     </div>
   );
 }

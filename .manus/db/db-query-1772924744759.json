@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM bigfive_profiles WHERE email = 'emcarvakk@hotmail.com' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2y4JCFyDezK8aiE.root --database 72F3cyMx3Hc4kQWwGuMs7s --execute SELECT * FROM bigfive_profiles WHERE email = 'emcarvakk@hotmail.com' LIMIT 1;",
+  "rows": [
+    {
+      "id": "bf_ZW1jYXJ2YWtrQGhvdG1haWwuY29t",
+      "name": "Erica carvalho",
+      "email": "emcarvakk@hotmail.com",
+      "responseTimestamp": "2026-03-05T18:33:14.758Z",
+      "rawResponses": "[5, 4, 2, 4, 2, 4, 5, 5, 1, 4, 2, 3, 4, 5, 3, 4, 2, 4, 5, 3, 5, 2, 4, 1, 3, 4, 3, 2, 4, 2]",
+      "dimensions": "{\"agreeableness\": {\"classification\": \"high\", \"description\": \"Alta empatia e colaboração — constrói vínculos de confiança com facilidade.\", \"emoji\": \"💚\", \"label\": \"Agradabilidade\", \"name\": \"Agradabilidade\", \"score\": 87}, \"conscientiousness\": {\"classification\": \"high\", \"description\": \"Alta organização, foco e confiabilidade — atenção a detalhes e cumprimento de prazos.\", \"emoji\": \"⚡\", \"label\": \"Conscienciosidade\", \"name\": \"Conscienciosidade\", \"score\": 87}, \"emotionalStability\": {\"classification\": \"moderate\", \"description\": \"Boa resiliência — lida bem com adversidades e mantém clareza em crises.\", \"emoji\": \"🌊\", \"label\": \"Estabilidade Emocional\", \"name\": \"Estabilidade Emocional\", \"score\": 67}, \"extraversion\": {\"classification\": \"high\", \"description\": \"Energizada pelo contato social — comunicativa, assertiva e com presença marcante.\", \"emoji\": \"☀️\", \"label\": \"Extroversão\", \"name\": \"Extroversão\", \"score\": 80}, \"openness\": {\"classification\": \"high\", \"description\": \"Pensamento inovador e criativo — facilidade para lidar com mudanças e visão sistêmica.\", \"emoji\": \"🌿\", \"label\": \"Abertura à Experiência\", \"name\": \"Abertura à Experiência\", \"score\": 83}}",
+      "combinationInsights": "[\"🚀 Perfil empreendedor forte — inovadora, comunicativa e aberta a riscos.\", \"✨ Inovadora Confiável — combina criatividade com execução disciplinada.\", \"💛 Alta agradabilidade: atenção à dificuldade em estabelecer limites e dizer não — síndrome da boa moça é um ponto de trabalho importante.\"]",
+      "recommendations": "[]",
+      "createdAt": "2026-03-05 18:33:14",
+      "updatedAt": "2026-03-05 18:33:14",
+      "ipip120Data": "NULL",
+      "testVersion": "30q"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tresponseTimestamp\trawResponses\tdimensions\tcombinationInsights\trecommendations\tcreatedAt\tupdatedAt\tipip120Data\ttestVersion\nbf_ZW1jYXJ2YWtrQGhvdG1haWwuY29t\tErica carvalho\temcarvakk@hotmail.com\t2026-03-05T18:33:14.758Z\t[5, 4, 2, 4, 2, 4, 5, 5, 1, 4, 2, 3, 4, 5, 3, 4, 2, 4, 5, 3, 5, 2, 4, 1, 3, 4, 3, 2, 4, 2]\t{\"agreeableness\": {\"classification\": \"high\", \"description\": \"Alta empatia e colaboração — constrói vínculos de confiança com facilidade.\", \"emoji\": \"💚\", \"label\": \"Agradabilidade\", \"name\": \"Agradabilidade\", \"score\": 87}, \"conscientiousness\": {\"classification\": \"high\", \"description\": \"Alta organização, foco e confiabilidade — atenção a detalhes e cumprimento de prazos.\", \"emoji\": \"⚡\", \"label\": \"Conscienciosidade\", \"name\": \"Conscienciosidade\", \"score\": 87}, \"emotionalStability\": {\"classification\": \"moderate\", \"description\": \"Boa resiliência — lida bem com adversidades e mantém clareza em crises.\", \"emoji\": \"🌊\", \"label\": \"Estabilidade Emocional\", \"name\": \"Estabilidade Emocional\", \"score\": 67}, \"extraversion\": {\"classification\": \"high\", \"description\": \"Energizada pelo contato social — comunicativa, assertiva e com presença marcante.\", \"emoji\": \"☀️\", \"label\": \"Extroversão\", \"name\": \"Extroversão\", \"score\": 80}, \"openness\": {\"classification\": \"high\", \"description\": \"Pensamento inovador e criativo — facilidade para lidar com mudanças e visão sistêmica.\", \"emoji\": \"🌿\", \"label\": \"Abertura à Experiência\", \"name\": \"Abertura à Experiência\", \"score\": 83}}\t[\"🚀 Perfil empreendedor forte — inovadora, comunicativa e aberta a riscos.\", \"✨ Inovadora Confiável — combina criatividade com execução disciplinada.\", \"💛 Alta agradabilidade: atenção à dificuldade em estabelecer limites e dizer não — síndrome da boa moça é um ponto de trabalho importante.\"]\t[]\t2026-03-05 18:33:14\t2026-03-05 18:33:14\tNULL\t30q\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}
