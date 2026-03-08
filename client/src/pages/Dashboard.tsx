@@ -375,6 +375,26 @@ export default function Dashboard() {
               </Card>
             </div>
 
+            {/* Card de acesso ao Mais Elas */}
+            <Card
+              className="p-5 cursor-pointer border-2 border-green-700/40 bg-gradient-to-r from-green-900/10 to-yellow-700/5 hover:border-green-600/70 hover:shadow-md transition-all"
+              onClick={() => setLocation('/mais-elas')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="text-3xl">🌿</div>
+                  <div>
+                    <p className="text-lg font-bold text-green-800 dark:text-green-400">Mais Elas</p>
+                    <p className="text-sm text-muted-foreground">Roda da Vida Profissional · Agro Com Propósito</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium">
+                  <span className="text-sm">Acessar Dashboard</span>
+                  <span className="text-lg">→</span>
+                </div>
+              </div>
+            </Card>
+
             {/* Médias das 5 Dimensões */}
             {profiles.length > 0 && (() => {
               const dims = DIMENSION_OPTIONS;
