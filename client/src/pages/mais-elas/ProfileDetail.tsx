@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { DIMENSOES, getScoreClass, getScoreLabel } from "@/lib/rodaDimensoes";
 import { RodaRadarChart } from "@/components/mais-elas/RodaRadarChart";
 import { RodaMentorGuide } from "@/components/mais-elas/RodaMentorGuide";
+import { RodaDevolutiva } from "@/components/RodaDevolutiva";
 import { useState, useRef } from "react";
 
 function ScoreBadge({ score }: { score: number | null }) {
@@ -183,6 +184,23 @@ export default function ProfileDetail() {
             </Button>
             <Button
               size="sm"
+              variant="outline"
+              onClick={() => {
+                const el = document.getElementById('roda-devolutiva-print');
+                if (!el) return;
+                const win = window.open('', '_blank');
+                if (!win) return;
+                win.document.write(`<!DOCTYPE html><html><head><title>Devolutiva — ${profile?.name}</title><meta charset="utf-8"><style>body{margin:0;padding:0;font-family:Georgia,serif}</style></head><body>${el.outerHTML}</body></html>`);
+                win.document.close();
+                win.focus();
+                setTimeout(() => { win.print(); }, 800);
+              }}
+              className="text-sidebar-foreground border-sidebar-foreground/30 hover:bg-sidebar-accent"
+            >
+              📄 Devolutiva
+            </Button>
+            <Button
+              size="sm"
               onClick={() => generateAnalysisMutation.mutate({ profileId: decodedId })}
               disabled={generateAnalysisMutation.isPending}
               className="bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
@@ -314,6 +332,11 @@ export default function ProfileDetail() {
       <div style={{ display: 'none' }}>
         <RodaMentorGuide profile={profile} analysis={analysis} />
       </div>
+      {/* Devolutiva pós-sessão para a mentorada — oculta na tela */}
+      <RodaDevolutiva
+        profile={profile}
+        aiAnalysis={analysis?.sintese ?? null}
+      />
     </div>
   );
 }
