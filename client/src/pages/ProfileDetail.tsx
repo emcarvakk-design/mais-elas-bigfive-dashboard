@@ -8,7 +8,7 @@ import { PrintableMentorGuide } from '@/components/PrintableMentorGuide';
 import { BigFiveRadarChart } from '@/components/RadarChart';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText, HelpCircle, BookOpen } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Lightbulb, Download, Printer, Activity, RefreshCw, BarChart2, FileText, HelpCircle, BookOpen, Brain, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { useLocation, useRoute } from 'wouter';
 import { BigFiveDimension } from '@/lib/bigfive';
 import { getFacetsByDimension } from '@/lib/facets';
@@ -21,9 +21,22 @@ export default function ProfileDetail() {
   const [match, params] = useRoute('/profile/:id');
   const [selectedDimension, setSelectedDimension] = useState<BigFiveDimension | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [analysisExpanded, setAnalysisExpanded] = useState<Record<string, boolean>>({});
+  const toggleSection = (key: string) => setAnalysisExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
   // Buscar todos os perfis do banco e encontrar o atual pelo ID
   const { data: dbProfiles = [], isLoading } = trpc.profiles.list.useQuery();
+  const profileId = params?.id ?? '';
+  const utils = trpc.useUtils();
+  // Buscar análise de mentoring salva
+  const { data: savedAnalysis, isLoading: analysisLoading } = trpc.mentoring.get.useQuery(
+    { profileId },
+    { enabled: !!profileId }
+  );
+  // Mutation para gerar nova análise
+  const generateAnalysis = trpc.mentoring.generate.useMutation({
+    onSuccess: () => utils.mentoring.get.invalidate({ profileId }),
+  });
 
   if (!match) {
     return null;
@@ -331,6 +344,83 @@ export default function ProfileDetail() {
           </div>
         )}
 
+        {/* Análise de Mentoring por IA */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Brain className="w-6 h-6 text-violet-600" />
+              Análise de Mentoring — IA
+            </h2>
+            <Button
+              onClick={() => generateAnalysis.mutate({
+                profileId,
+                profileName: profile.name,
+                dimensions: {
+                  openness: { score: profile.dimensions.openness.score, classification: profile.dimensions.openness.classification, label: profile.dimensions.openness.label },
+                  conscientiousness: { score: profile.dimensions.conscientiousness.score, classification: profile.dimensions.conscientiousness.classification, label: profile.dimensions.conscientiousness.label },
+                  extraversion: { score: profile.dimensions.extraversion.score, classification: profile.dimensions.extraversion.classification, label: profile.dimensions.extraversion.label },
+                  agreeableness: { score: profile.dimensions.agreeableness.score, classification: profile.dimensions.agreeableness.classification, label: profile.dimensions.agreeableness.label },
+                  emotionalStability: { score: profile.dimensions.emotionalStability.score, classification: profile.dimensions.emotionalStability.classification, label: profile.dimensions.emotionalStability.label },
+                },
+                testVersion: profile.testVersion,
+              })}
+              disabled={generateAnalysis.isPending}
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+            >
+              {generateAnalysis.isPending ? (
+                <><RefreshCw className="w-4 h-4 animate-spin" /> Gerando...</>
+              ) : (
+                <><Sparkles className="w-4 h-4" /> {savedAnalysis ? 'Regenerar Análise' : 'Gerar Análise'}</>
+              )}
+            </Button>
+          </div>
+
+          {analysisLoading && (
+            <div className="flex items-center gap-3 text-muted-foreground py-8">
+              <RefreshCw className="w-5 h-5 animate-spin" />
+              <span>Carregando análise...</span>
+            </div>
+          )}
+
+          {!analysisLoading && !savedAnalysis && !generateAnalysis.isPending && (
+            <Card className="p-8 text-center border-dashed border-2 border-violet-200 bg-violet-50/30">
+              <Brain className="w-12 h-12 text-violet-300 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm mb-1">Nenhuma análise gerada ainda.</p>
+              <p className="text-xs text-muted-foreground">Clique em "Gerar Análise" para criar uma análise personalizada com IA baseada no perfil Big Five.</p>
+            </Card>
+          )}
+
+          {savedAnalysis && (() => {
+            const sections = [
+              { key: 'ajudas', label: '✅ O que Ajuda', color: 'emerald', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-400', textColor: 'text-emerald-800', content: savedAnalysis.ajudas },
+              { key: 'oportunidades', label: '🌱 Oportunidades de Crescimento', color: 'amber', bgColor: 'bg-amber-50', borderColor: 'border-amber-400', textColor: 'text-amber-800', content: savedAnalysis.oportunidades },
+              { key: 'riscos', label: '⚠️ Pontos de Atenção', color: 'red', bgColor: 'bg-red-50', borderColor: 'border-red-400', textColor: 'text-red-800', content: savedAnalysis.riscos },
+              { key: 'sintese', label: '🎯 Síntese para Devolutiva', color: 'violet', bgColor: 'bg-violet-50', borderColor: 'border-violet-400', textColor: 'text-violet-800', content: savedAnalysis.sintese },
+            ];
+            return (
+              <div className="space-y-4">
+                {sections.map(sec => (
+                  <Card key={sec.key} className={`border-l-4 ${sec.borderColor} ${sec.bgColor} overflow-hidden`}>
+                    <button
+                      className="w-full flex items-center justify-between p-4 text-left"
+                      onClick={() => toggleSection(sec.key)}
+                    >
+                      <span className={`font-semibold text-base ${sec.textColor}`}>{sec.label}</span>
+                      {analysisExpanded[sec.key] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                    {analysisExpanded[sec.key] && (
+                      <div className="px-4 pb-4">
+                        <p className="text-sm whitespace-pre-wrap text-foreground/80">{sec.content}</p>
+                      </div>
+                    )}
+                  </Card>
+                ))}
+                <p className="text-xs text-muted-foreground text-right">Gerado em: {new Date(savedAnalysis.createdAt).toLocaleString('pt-BR')}</p>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* Recomendações */}
         {recommendations.length > 0 && (
           <div>
@@ -376,7 +466,7 @@ export default function ProfileDetail() {
       {/* PDF de Perguntas Poderosas */}
       <PrintablePowerfulQuestions profile={profile} />
       {/* Guia da Mentora */}
-      <PrintableMentorGuide profile={profile} />
+      <PrintableMentorGuide profile={profile} analysis={savedAnalysis} />
     </div>
   );
 }

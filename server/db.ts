@@ -307,3 +307,54 @@ export async function deduplicateProfiles(): Promise<{ removed: number; normaliz
 
   return { removed, normalized };
 }
+
+// ─── Mentoring Analyses ──────────────────────────────────────────────────────
+
+import { mentoringAnalyses, InsertMentoringAnalysis } from "../drizzle/schema";
+
+/** Salva ou atualiza a análise de mentoring gerada por IA para um perfil. */
+export async function saveMentoringAnalysis(data: InsertMentoringAnalysis): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save mentoring analysis: database not available");
+    return;
+  }
+  try {
+    // Verificar se já existe análise para este perfil
+    const existing = await db
+      .select()
+      .from(mentoringAnalyses)
+      .where(eq(mentoringAnalyses.profileId, data.profileId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      await db.update(mentoringAnalyses)
+        .set({
+          ajudas: data.ajudas,
+          oportunidades: data.oportunidades,
+          riscos: data.riscos,
+          sintese: data.sintese,
+          fullAnalysis: data.fullAnalysis,
+          updatedAt: new Date(),
+        })
+        .where(eq(mentoringAnalyses.profileId, data.profileId));
+    } else {
+      await db.insert(mentoringAnalyses).values(data);
+    }
+  } catch (error) {
+    console.error("[Database] Failed to save mentoring analysis:", error);
+    throw error;
+  }
+}
+
+/** Busca a análise de mentoring de um perfil pelo profileId. */
+export async function getMentoringAnalysis(profileId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(mentoringAnalyses)
+    .where(eq(mentoringAnalyses.profileId, profileId))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
+}

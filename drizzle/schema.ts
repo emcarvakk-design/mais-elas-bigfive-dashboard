@@ -57,3 +57,28 @@ export const bigfiveProfiles = mysqlTable("bigfive_profiles", {
 
 export type BigfiveProfile = typeof bigfiveProfiles.$inferSelect;
 export type InsertBigfiveProfile = typeof bigfiveProfiles.$inferInsert;
+
+/**
+ * Tabela de análises de mentoring geradas por IA.
+ * Cada análise é vinculada a um perfil Big Five e contém
+ * os blocos: ajudas, oportunidades, riscos e síntese.
+ */
+export const mentoringAnalyses = mysqlTable("mentoring_analyses", {
+  id: int("id").autoincrement().primaryKey(),
+  profileId: varchar("profileId", { length: 64 }).notNull(),
+  /** Bloco: Principais ajudas para o mentorado */
+  ajudas: text("ajudas").notNull(),
+  /** Bloco: Principais oportunidades */
+  oportunidades: text("oportunidades").notNull(),
+  /** Bloco: Principais riscos */
+  riscos: text("riscos").notNull(),
+  /** Síntese pronta para devolutiva */
+  sintese: text("sintese").notNull(),
+  /** Análise completa em markdown */
+  fullAnalysis: text("fullAnalysis").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MentoringAnalysis = typeof mentoringAnalyses.$inferSelect;
+export type InsertMentoringAnalysis = typeof mentoringAnalyses.$inferInsert;

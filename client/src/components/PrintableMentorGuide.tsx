@@ -1,10 +1,19 @@
 import { type BigFiveProfile } from '@/lib/bigfive';
 
-interface Props {
-  profile: BigFiveProfile;
+interface MentoringAnalysis {
+  ajudas: string;
+  oportunidades: string;
+  riscos: string;
+  sintese: string;
+  createdAt: Date | string;
 }
 
-// ─── Dados completos por subfaceta ───────────────────────────────────────────
+interface Props {
+  profile: BigFiveProfile;
+  analysis?: MentoringAnalysis | null;
+}
+
+// --- Dados completos por subfaceta ---
 
 const MENTOR_GUIDE: Record<string, {
   label: string;
@@ -581,7 +590,7 @@ const MENTOR_GUIDE: Record<string, {
 
 const DIMENSION_ORDER = ['emotionalStability', 'extraversion', 'openness', 'agreeableness', 'conscientiousness'] as const;
 
-export function PrintableMentorGuide({ profile }: Props) {
+export function PrintableMentorGuide({ profile, analysis }: Props) {
   const { dimensions } = profile;
 
   return (
@@ -1341,6 +1350,45 @@ export function PrintableMentorGuide({ profile }: Props) {
           </div>
         );
       })()}
+
+      {/* Seção de Análise IA — aparece apenas se a análise foi gerada */}
+      {analysis && (
+        <div style={{ marginTop: '24px', pageBreakBefore: 'always' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
+            color: 'white',
+            padding: '20px 24px',
+            borderRadius: '10px',
+            marginBottom: '16px'
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '2px', opacity: 0.7, marginBottom: '4px' }}>ANÁLISE GERADA POR IA</div>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 4px 0' }}>🤖 Análise de Mentoring Personalizada</h2>
+            <p style={{ fontSize: '10px', opacity: 0.8, margin: 0 }}>Baseada no perfil Big Five de {profile.name} · Gerada em {new Date(analysis.createdAt).toLocaleDateString('pt-BR')}</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ background: '#f0fdf4', border: '2px solid #4ade80', borderRadius: '8px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#166534', marginBottom: '8px' }}>✅ O QUE AJUDA</div>
+              <p style={{ fontSize: '9px', color: '#14532d', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{analysis.ajudas}</p>
+            </div>
+            <div style={{ background: '#fffbeb', border: '2px solid #fbbf24', borderRadius: '8px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#92400e', marginBottom: '8px' }}>🌱 OPORTUNIDADES DE CRESCIMENTO</div>
+              <p style={{ fontSize: '9px', color: '#78350f', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{analysis.oportunidades}</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ background: '#fef2f2', border: '2px solid #f87171', borderRadius: '8px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#991b1b', marginBottom: '8px' }}>⚠️ PONTOS DE ATENÇÃO</div>
+              <p style={{ fontSize: '9px', color: '#7f1d1d', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{analysis.riscos}</p>
+            </div>
+            <div style={{ background: '#f5f3ff', border: '2px solid #a78bfa', borderRadius: '8px', padding: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#5b21b6', marginBottom: '8px' }}>🎯 SÍNTESE PARA DEVOLUTIVA</div>
+              <p style={{ fontSize: '9px', color: '#4c1d95', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{analysis.sintese}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mg-footer">
         Guia de uso exclusivo da mentora — Big Five Dashboard &nbsp;·&nbsp; Gerado em {new Date().toLocaleDateString('pt-BR')}

@@ -10,7 +10,10 @@ import {
   deleteBigfiveProfile,
   deleteAllBigfiveProfiles,
   deduplicateProfiles,
+  saveMentoringAnalysis,
+  getMentoringAnalysis,
 } from "./db";
+import { invokeLLM } from "./_core/llm";
 
 // ─── Zod schema para uma dimensão Big Five ───────────────────────────────────
 const dimensionSchema = z.object({
@@ -178,16 +181,13 @@ export const appRouter = router({
       if (!csvText.trim()) {
         throw new Error('Planilha vazia ou inacessível');
       }
-
       return { csv: csvText };
     }),
-
     /** Planilha IPIP-NEO-120 (120 questões) */
     fetchResponsesIPIP120: publicProcedure.query(async () => {
       const SHEET_ID = '1gnBms78OFB2AqMjVjHSuZaT-Kg0qYqGmomPAWjDpWxI';
       const SHEET_GID = '1030652843';
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-
       let response = await fetch(csvUrl, { redirect: 'follow' });
       
       if (response.status === 307 || response.status === 302 || response.status === 301) {
@@ -196,19 +196,111 @@ export const appRouter = router({
           response = await fetch(location, { redirect: 'follow' });
         }
       }
-
       if (!response.ok) {
         throw new Error(`Erro ao buscar planilha IPIP-120: ${response.status} ${response.statusText}`);
       }
-
-      const csvText = await response.text();
-      if (!csvText.trim()) {
+      const csvText2 = await response.text();
+      if (!csvText2.trim()) {
         throw new Error('Planilha IPIP-120 vazia ou inacessível');
       }
-
-      return { csv: csvText };
+      return { csv: csvText2 };
     }),
   }),
-});
+  // ─── Análise de Mentoring por IA ─────────────────────────────────────────
+  mentoring: router({
+    /** Gera análise de mentoring via IA com base nos escores do perfil */
+    generate: publicProcedure
+      .input(z.object({
+        profileId: z.string(),
+        profileName: z.string(),
+        dimensions: z.object({
+          openness: z.object({ score: z.number(), classification: z.string(), label: z.string() }),
+          conscientiousness: z.object({ score: z.number(), classification: z.string(), label: z.string() }),
+          extraversion: z.object({ score: z.number(), classification: z.string(), label: z.string() }),
+          agreeableness: z.object({ score: z.number(), classification: z.string(), label: z.string() }),
+          emotionalStability: z.object({ score: z.number(), classification: z.string(), label: z.string() }),
+        }),
+        testVersion: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { profileId, profileName, dimensions, testVersion } = input;
+        const isIPIP = testVersion === 'ipip120';
 
+        const dimSummary = [
+          `- Abertura à Experiência: ${dimensions.openness.score}% (${dimensions.openness.classification})`,
+          `- Conscienciosidade: ${dimensions.conscientiousness.score}% (${dimensions.conscientiousness.classification})`,
+          `- Extroversão: ${dimensions.extraversion.score}% (${dimensions.extraversion.classification})`,
+          `- Agradabilidade: ${dimensions.agreeableness.score}% (${dimensions.agreeableness.classification})`,
+          `- Estabilidade Emocional: ${dimensions.emotionalStability.score}% (${dimensions.emotionalStability.classification})`,
+        ].join('\n');
+
+        const prompt = `Você é uma especialista em mentoring de desenvolvimento humano com profundo conhecimento no modelo Big Five de personalidade e na metodologia FPC (Formação de Pessoas e Carreiras).
+
+Analise o perfil de personalidade abaixo e gere uma análise estruturada para apoiar a sessão de mentoring. O perfil é de ${isIPIP ? 'teste IPIP-NEO-120 (subfacetas medidas diretamente)' : 'teste de 30 questões (dimensões gerais)'}.
+
+**Nome:** ${profileName}
+
+**Escores Big Five:**
+${dimSummary}
+
+Gere a análise em português brasileiro, no seguinte formato JSON exato:
+{
+  "ajudas": "Texto em markdown com os 4-5 principais pontos de ajuda para o mentorado. Cada ponto deve ter título em negrito e 2-3 parágrafos explicando o que trabalhar, como a dimensão se manifesta e qual a abordagem de mentoring recomendada. Use linguagem da FPC quando relevante.",
+  "oportunidades": "Texto em markdown com as 3-4 principais oportunidades de desenvolvimento e crescimento. Inclua potenciais de carreira, liderança, comunicação e adaptabilidade.",
+  "riscos": "Texto em markdown com os 4-5 principais riscos e pontos de atenção. Seja específico sobre como cada risco se manifesta no dia a dia.",
+  "sintese": "Uma síntese de 3-4 linhas, direta e poderosa, pronta para ser usada na devolutiva oral. Deve capturar a essência do perfil em linguagem de mentoring."
+}
+
+Importante: seja específico, use os escores reais, conecte as dimensões entre si quando relevante, e mantenha linguagem profissional de mentoring.`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: 'Você é especialista em mentoring de desenvolvimento humano e Big Five. Responda sempre em JSON válido.' },
+            { role: 'user', content: prompt },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'mentoring_analysis',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  ajudas: { type: 'string' },
+                  oportunidades: { type: 'string' },
+                  riscos: { type: 'string' },
+                  sintese: { type: 'string' },
+                },
+                required: ['ajudas', 'oportunidades', 'riscos', 'sintese'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const content = response.choices[0].message.content as string;
+        const parsed = JSON.parse(content);
+
+        const fullAnalysis = `## Principais Ajudas\n\n${parsed.ajudas}\n\n## Principais Oportunidades\n\n${parsed.oportunidades}\n\n## Principais Riscos\n\n${parsed.riscos}\n\n## Síntese para Devolutiva\n\n${parsed.sintese}`;
+
+        await saveMentoringAnalysis({
+          profileId,
+          ajudas: parsed.ajudas,
+          oportunidades: parsed.oportunidades,
+          riscos: parsed.riscos,
+          sintese: parsed.sintese,
+          fullAnalysis,
+        });
+
+        return { ajudas: parsed.ajudas, oportunidades: parsed.oportunidades, riscos: parsed.riscos, sintese: parsed.sintese, fullAnalysis };
+      }),
+
+    /** Busca análise de mentoring salva para um perfil */
+    get: publicProcedure
+      .input(z.object({ profileId: z.string() }))
+      .query(async ({ input }) => {
+        return getMentoringAnalysis(input.profileId);
+      }),
+  }),
+});
 export type AppRouter = typeof appRouter;

@@ -29,6 +29,13 @@
       "when": 1772801157072,
       "tag": "0003_nosy_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1773000331648,
+      "tag": "0004_slim_bruce_banner",
+      "breakpoints": true
     }
   ]
 }
