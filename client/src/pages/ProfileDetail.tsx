@@ -59,7 +59,7 @@ export default function ProfileDetail() {
     <div className="min-h-screen bg-background">
       <div className="container py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 no-print">
           {/* Linha 1: navegação + identidade */}
           <div className="flex items-center gap-4 mb-4">
             <Button
