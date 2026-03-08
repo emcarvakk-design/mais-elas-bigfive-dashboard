@@ -59,59 +59,75 @@ export default function ProfileDetail() {
     <div className="min-h-screen bg-background">
       <div className="container py-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mb-8">
+          {/* Linha 1: navegação + identidade */}
+          <div className="flex items-center gap-4 mb-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setLocation('/')}
+              className="shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">{profile.name}</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-muted-foreground">{profile.email}</p>
-                {isIPIP120 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                    <BarChart2 className="w-3 h-3" />
-                    IPIP-NEO-120
-                  </span>
-                )}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-primary font-bold text-lg shrink-0">
+                {profile.name?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-bold">{profile.name}</h1>
+                  {isIPIP120 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                      <BarChart2 className="w-3 h-3" />
+                      IPIP-NEO-120
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{profile.email}</p>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="flex items-center gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              Imprimir
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => window.print()}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Baixar PDF
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                document.body.classList.add('print-summary-mode');
-                window.print();
-                setTimeout(() => document.body.classList.remove('print-summary-mode'), 1000);
-              }}
-              className="flex items-center gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              Resumo (2 pág.)
-            </Button>
+
+          {/* Linha 2: botões de ação agrupados */}
+          <div className="flex flex-wrap items-center gap-2 pl-16">
+            {/* Grupo: Impressão geral */}
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 text-xs h-8"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Imprimir
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 text-xs h-8"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Baixar PDF
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  document.body.classList.add('print-summary-mode');
+                  window.print();
+                  setTimeout(() => document.body.classList.remove('print-summary-mode'), 1000);
+                }}
+                className="flex items-center gap-1.5 text-xs h-8"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Resumo
+              </Button>
+            </div>
+
+            <div className="w-px h-6 bg-border" />
+
+            {/* Grupo: PDFs para mentorado */}
             <Button
               variant="outline"
               size="sm"
@@ -120,11 +136,13 @@ export default function ProfileDetail() {
                 window.print();
                 setTimeout(() => document.body.classList.remove('print-powerful-mode'), 1000);
               }}
-              className="flex items-center gap-2 border-purple-400 text-purple-700 hover:bg-purple-50"
+              className="flex items-center gap-1.5 text-xs h-8 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
             >
-              <HelpCircle className="w-4 h-4" />
+              <HelpCircle className="w-3.5 h-3.5" />
               Perguntas Poderosas
             </Button>
+
+            {/* Grupo: PDF da mentora */}
             <Button
               variant="outline"
               size="sm"
@@ -133,9 +151,9 @@ export default function ProfileDetail() {
                 window.print();
                 setTimeout(() => document.body.classList.remove('print-mentor-guide-mode'), 1000);
               }}
-              className="flex items-center gap-2 border-indigo-400 text-indigo-700 hover:bg-indigo-50"
+              className="flex items-center gap-1.5 text-xs h-8 border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400"
             >
-              <BookOpen className="w-4 h-4" />
+              <BookOpen className="w-3.5 h-3.5" />
               Guia da Mentora
             </Button>
           </div>
