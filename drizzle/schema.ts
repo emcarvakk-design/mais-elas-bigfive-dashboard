@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, float } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -82,3 +82,53 @@ export const mentoringAnalyses = mysqlTable("mentoring_analyses", {
 
 export type MentoringAnalysis = typeof mentoringAnalyses.$inferSelect;
 export type InsertMentoringAnalysis = typeof mentoringAnalyses.$inferInsert;
+
+// ============================================================
+// MAIS ELAS — Roda da Vida Profissional (Agro Com Propósito)
+// ============================================================
+
+/** Perfis das mentoradas do programa Mais Elas */
+export const rodaProfiles = mysqlTable("roda_profiles", {
+  id: varchar("id", { length: 255 }).primaryKey(), // email normalizado
+  email: varchar("email", { length: 320 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  area: varchar("area", { length: 255 }),
+  faixaEtaria: varchar("faixaEtaria", { length: 100 }),
+  // Notas da Roda da Vida (0-10 cada)
+  scoreCarreira: float("scoreCarreira"),
+  scoreFinanceiro: float("scoreFinanceiro"),
+  scoreProposito: float("scoreProposito"),
+  scoreLideranca: float("scoreLideranca"),
+  scoreRelacionamentos: float("scoreRelacionamentos"),
+  scoreDesenvolvimento: float("scoreDesenvolvimento"),
+  scoreSaude: float("scoreSaude"),
+  scoreEquilibrio: float("scoreEquilibrio"),
+  scoreReconhecimento: float("scoreReconhecimento"),
+  scoreAutonomia: float("scoreAutonomia"),
+  // Respostas abertas
+  respostaEstacao: text("respostaEstacao"),
+  respostaDrena: text("respostaDrena"),
+  respostaRelacionamento: text("respostaRelacionamento"),
+  respostaConquista: text("respostaConquista"),
+  respostaObstaculo: text("respostaObstaculo"),
+  respostaHabilidade: text("respostaHabilidade"),
+  respostaLegado: text("respostaLegado"),
+  respostaDimensaoAtencao: text("respostaDimensaoAtencao"),
+  submittedAt: timestamp("submittedAt"),
+  syncedAt: timestamp("syncedAt").defaultNow(),
+});
+export type RodaProfile = typeof rodaProfiles.$inferSelect;
+export type InsertRodaProfile = typeof rodaProfiles.$inferInsert;
+
+/** Análises IA por perfil do Mais Elas */
+export const rodaAnalyses = mysqlTable("roda_analyses", {
+  id: int("id").autoincrement().primaryKey(),
+  profileId: varchar("profileId", { length: 255 }).notNull(),
+  ajudas: text("ajudas").notNull(),
+  oportunidades: text("oportunidades").notNull(),
+  riscos: text("riscos").notNull(),
+  sintese: text("sintese").notNull(),
+  fullAnalysis: text("fullAnalysis").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RodaAnalysis = typeof rodaAnalyses.$inferSelect;

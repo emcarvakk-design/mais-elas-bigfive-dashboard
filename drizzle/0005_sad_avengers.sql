@@ -1,0 +1,40 @@
+CREATE TABLE `roda_analyses` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`profileId` varchar(255) NOT NULL,
+	`ajudas` text NOT NULL,
+	`oportunidades` text NOT NULL,
+	`riscos` text NOT NULL,
+	`sintese` text NOT NULL,
+	`fullAnalysis` text NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `roda_analyses_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `roda_profiles` (
+	`id` varchar(255) NOT NULL,
+	`email` varchar(320) NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`area` varchar(255),
+	`faixaEtaria` varchar(100),
+	`scoreCarreira` float,
+	`scoreFinanceiro` float,
+	`scoreProposito` float,
+	`scoreLideranca` float,
+	`scoreRelacionamentos` float,
+	`scoreDesenvolvimento` float,
+	`scoreSaude` float,
+	`scoreEquilibrio` float,
+	`scoreReconhecimento` float,
+	`scoreAutonomia` float,
+	`respostaEstacao` text,
+	`respostaDrena` text,
+	`respostaRelacionamento` text,
+	`respostaConquista` text,
+	`respostaObstaculo` text,
+	`respostaHabilidade` text,
+	`respostaLegado` text,
+	`respostaDimensaoAtencao` text,
+	`submittedAt` timestamp,
+	`syncedAt` timestamp DEFAULT (now()),
+	CONSTRAINT `roda_profiles_id` PRIMARY KEY(`id`)
+);

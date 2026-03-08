@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import ProfileDetail from "./pages/ProfileDetail";
 import Compare from './pages/Compare';
 import TestApp from './pages/TestApp';
+import MaisElasDashboard from './pages/mais-elas/Dashboard';
+import MaisElasProfile from './pages/mais-elas/ProfileDetail';
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -18,6 +20,8 @@ function Router() {
       <Route path={"/profile/:id"} component={ProfileDetail} />
       <Route path={"/compare"} component={Compare} />
       <Route path={"/teste"} component={TestApp} />
+      <Route path={"/mais-elas"} component={MaisElasDashboard} />
+      <Route path={"/mais-elas/perfil/:id"} component={MaisElasProfile} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

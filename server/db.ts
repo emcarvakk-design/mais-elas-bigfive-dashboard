@@ -1,6 +1,6 @@
-import { eq, or } from "drizzle-orm";
+import { eq, or, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, InsertBigfiveProfile, bigfiveProfiles, users } from "../drizzle/schema";
+import { InsertUser, InsertBigfiveProfile, bigfiveProfiles, users, rodaProfiles, rodaAnalyses } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -358,3 +358,71 @@ export async function getMentoringAnalysis(profileId: string) {
     .limit(1);
   return result.length > 0 ? result[0] : null;
 }
+
+// ─── MAIS ELAS — Roda da Vida Profissional ───────────────────────────────────────────
+
+export async function getAllRodaProfiles() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rodaProfiles).orderBy(desc(rodaProfiles.syncedAt));
+}
+
+export async function getRodaProfileById(id: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(rodaProfiles).where(eq(rodaProfiles.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function upsertRodaProfile(data: {
+  id: string; email: string; name: string; area?: string | null; faixaEtaria?: string | null;
+  scoreCarreira?: number | null; scoreFinanceiro?: number | null; scoreProposito?: number | null;
+  scoreLideranca?: number | null; scoreRelacionamentos?: number | null; scoreDesenvolvimento?: number | null;
+  scoreSaude?: number | null; scoreEquilibrio?: number | null; scoreReconhecimento?: number | null;
+  scoreAutonomia?: number | null;
+  respostaEstacao?: string | null; respostaDrena?: string | null; respostaRelacionamento?: string | null;
+  respostaConquista?: string | null; respostaObstaculo?: string | null; respostaHabilidade?: string | null;
+  respostaLegado?: string | null; respostaDimensaoAtencao?: string | null;
+  submittedAt?: Date | null;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await getRodaProfileById(data.id);
+  if (existing) {
+    await db.update(rodaProfiles).set({
+      email: data.email, name: data.name, area: data.area, faixaEtaria: data.faixaEtaria,
+      scoreCarreira: data.scoreCarreira, scoreFinanceiro: data.scoreFinanceiro,
+      scoreProposito: data.scoreProposito, scoreLideranca: data.scoreLideranca,
+      scoreRelacionamentos: data.scoreRelacionamentos, scoreDesenvolvimento: data.scoreDesenvolvimento,
+      scoreSaude: data.scoreSaude, scoreEquilibrio: data.scoreEquilibrio,
+      scoreReconhecimento: data.scoreReconhecimento, scoreAutonomia: data.scoreAutonomia,
+      respostaEstacao: data.respostaEstacao, respostaDrena: data.respostaDrena,
+      respostaRelacionamento: data.respostaRelacionamento, respostaConquista: data.respostaConquista,
+      respostaObstaculo: data.respostaObstaculo, respostaHabilidade: data.respostaHabilidade,
+      respostaLegado: data.respostaLegado, respostaDimensaoAtencao: data.respostaDimensaoAtencao,
+      submittedAt: data.submittedAt ?? undefined,
+      syncedAt: new Date(),
+    }).where(eq(rodaProfiles.id, data.id));
+  } else {
+    await db.insert(rodaProfiles).values({ ...data, syncedAt: new Date() });
+  }
+}
+
+export async function getRodaAnalysis(profileId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(rodaAnalyses)
+    .where(eq(rodaAnalyses.profileId, profileId))
+    .orderBy(desc(rodaAnalyses.createdAt))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function saveRodaAnalysis(data: {
+  profileId: string; ajudas: string; oportunidades: string; riscos: string; sintese: string; fullAnalysis: string;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(rodaAnalyses).values(data);
+}
+

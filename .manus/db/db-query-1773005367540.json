@@ -1,0 +1,25 @@
+{
+  "query": "SELECT id, name, email FROM roda_profiles LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2y4JCFyDezK8aiE.root --database 72F3cyMx3Hc4kQWwGuMs7s --execute SELECT id, name, email FROM roda_profiles LIMIT 5;",
+  "rows": [
+    {
+      "id": "ana.silva@agro.com.br",
+      "name": "Ana Silva",
+      "email": "ana.silva@agro.com.br"
+    },
+    {
+      "id": "carla.oliveira@cooperativa.org",
+      "name": "Carla Oliveira",
+      "email": "carla.oliveira@cooperativa.org"
+    },
+    {
+      "id": "maria.santos@fazenda.com",
+      "name": "Maria Santos",
+      "email": "maria.santos@fazenda.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\nana.silva@agro.com.br\tAna Silva\tana.silva@agro.com.br\ncarla.oliveira@cooperativa.org\tCarla Oliveira\tcarla.oliveira@cooperativa.org\nmaria.santos@fazenda.com\tMaria Santos\tmaria.santos@fazenda.com\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

@@ -12,7 +12,12 @@ import {
   deduplicateProfiles,
   saveMentoringAnalysis,
   getMentoringAnalysis,
+  getAllRodaProfiles,
+  getRodaProfileById,
+  getRodaAnalysis,
+  saveRodaAnalysis,
 } from "./db";
+import { syncRodaProfiles } from "./syncJobMaisElas";
 import { invokeLLM } from "./_core/llm";
 
 // ─── Zod schema para uma dimensão Big Five ───────────────────────────────────
@@ -45,9 +50,75 @@ const profileInputSchema = z.object({
   testVersion: z.string().optional(),
 });
 
+// ─── MAIS ELAS — Roda da Vida Profissional ───────────────────────────────────
+const maisElasRouter = router({
+  list: publicProcedure.query(async () => getAllRodaProfiles()),
+  getById: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => getRodaProfileById(input.id)),
+  sync: publicProcedure.mutation(async () => syncRodaProfiles()),
+  getAnalysis: publicProcedure.input(z.object({ profileId: z.string() })).query(async ({ input }) => getRodaAnalysis(input.profileId)),
+  generateAnalysis: publicProcedure
+    .input(z.object({ profileId: z.string() }))
+    .mutation(async ({ input }) => {
+      const profile = await getRodaProfileById(input.profileId);
+      if (!profile) throw new Error('Perfil não encontrado');
+      const scores = [
+        { name: 'Carreira', score: profile.scoreCarreira },
+        { name: 'Financeiro', score: profile.scoreFinanceiro },
+        { name: 'Propósito', score: profile.scoreProposito },
+        { name: 'Liderança', score: profile.scoreLideranca },
+        { name: 'Relacionamentos', score: profile.scoreRelacionamentos },
+        { name: 'Desenvolvimento', score: profile.scoreDesenvolvimento },
+        { name: 'Saúde e Energia', score: profile.scoreSaude },
+        { name: 'Equilíbrio', score: profile.scoreEquilibrio },
+        { name: 'Reconhecimento', score: profile.scoreReconhecimento },
+        { name: 'Autonomia', score: profile.scoreAutonomia },
+      ].filter(s => s.score !== null);
+      const scoresText = scores.map(s => `${s.name}: ${s.score}/10`).join('\n');
+      const respostas = [
+        profile.respostaEstacao && `Estação profissional: ${profile.respostaEstacao}`,
+        profile.respostaDrena && `O que drena/renova: ${profile.respostaDrena}`,
+        profile.respostaConquista && `Maior conquista: ${profile.respostaConquista}`,
+        profile.respostaObstaculo && `Maior obstáculo: ${profile.respostaObstaculo}`,
+        profile.respostaLegado && `Legado desejado: ${profile.respostaLegado}`,
+        profile.respostaDimensaoAtencao && `Dimensão que precisa de atenção: ${profile.respostaDimensaoAtencao}`,
+      ].filter(Boolean).join('\n');
+      const prompt = `Você é uma mentora especialista em desenvolvimento humano e carreira de mulheres no agronegócio.\nAnalise o perfil da Roda da Vida Profissional de ${profile.name} e gere uma análise de mentoring estruturada em 4 blocos.\nESCORES DA RODA DA VIDA (0-10):\n${scoresText}\nRESPOSTAS ABERTAS:\n${respostas || 'Não disponíveis'}\nGere a análise em 4 blocos EXATAMENTE neste formato JSON:\n{\n  "ajudas": "Texto sobre os principais pontos fortes",\n  "oportunidades": "Texto sobre as principais oportunidades de crescimento",\n  "riscos": "Texto sobre os principais riscos e pontos de atenção",\n  "sintese": "Síntese integradora pronta para a devolutiva"\n}\nUse linguagem acolhedora, direta e profissional. Foco em mulheres do agronegócio. Sempre em português brasileiro.`;
+      const response = await invokeLLM({
+        messages: [
+          { role: 'system', content: 'Você é uma mentora especialista em desenvolvimento humano e carreira de mulheres no agronegócio. Responda sempre em JSON válido.' },
+          { role: 'user', content: prompt },
+        ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'mentoring_analysis',
+            strict: true,
+            schema: {
+              type: 'object',
+              properties: {
+                ajudas: { type: 'string' },
+                oportunidades: { type: 'string' },
+                riscos: { type: 'string' },
+                sintese: { type: 'string' },
+              },
+              required: ['ajudas', 'oportunidades', 'riscos', 'sintese'],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+      const content = typeof response.choices[0].message.content === 'string' ? response.choices[0].message.content : JSON.stringify(response.choices[0].message.content);
+      const parsed = JSON.parse(content);
+      const fullAnalysis = `## Ajudas\n${parsed.ajudas}\n\n## Oportunidades\n${parsed.oportunidades}\n\n## Riscos\n${parsed.riscos}\n\n## Síntese\n${parsed.sintese}`;
+      await saveRodaAnalysis({ profileId: input.profileId, ajudas: parsed.ajudas, oportunidades: parsed.oportunidades, riscos: parsed.riscos, sintese: parsed.sintese, fullAnalysis });
+      return { ajudas: parsed.ajudas, oportunidades: parsed.oportunidades, riscos: parsed.riscos, sintese: parsed.sintese, fullAnalysis };
+    }),
+});
+
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+  maisElas: maisElasRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -303,4 +374,5 @@ Importante: seja específico, use os escores reais, conecte as dimensões entre 
       }),
   }),
 });
+
 export type AppRouter = typeof appRouter;
