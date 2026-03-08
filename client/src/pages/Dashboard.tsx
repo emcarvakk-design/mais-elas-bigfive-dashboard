@@ -382,10 +382,9 @@ export default function Dashboard() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="text-3xl">🌿</div>
+                  <div className="text-3xl">🌱</div>
                   <div>
                     <p className="text-lg font-bold text-green-800 dark:text-green-400">Mais Elas</p>
-                    <p className="text-sm text-muted-foreground">Roda da Vida Profissional · Agro Com Propósito</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-medium">

@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_profiles FROM roda_profiles;\nSELECT COUNT(*) as total_analyses FROM roda_analyses;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2y4JCFyDezK8aiE.root --database 72F3cyMx3Hc4kQWwGuMs7s --execute SELECT COUNT(*) as total_profiles FROM roda_profiles;\nSELECT COUNT(*) as total_analyses FROM roda_analyses;",
+  "rows": [
+    {
+      "total_profiles": "0"
+    },
+    {
+      "total_profiles": "total_analyses"
+    },
+    {
+      "total_profiles": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_profiles\n0\ntotal_analyses\n0\n",
+  "stderr": "",
+  "execution_time_ms": 71
+}
