@@ -325,8 +325,8 @@ async function sync30q(): Promise<{ saved: number; errors: number }> {
 }
 
 async function syncIPIP120(): Promise<{ saved: number; errors: number }> {
-  const SHEET_ID = '1gnBms78OFB2AqMjVjHSuZaT-Kg0qYqGmomPAWjDpWxI';
-  const GID = '1030652843';
+  const SHEET_ID = '1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E';
+  const GID = '1081644880';
   const csv = await fetchSheet(SHEET_ID, GID);
 
   const lines = csv.split('\n').filter(l => l.trim());

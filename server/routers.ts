@@ -256,8 +256,8 @@ export const appRouter = router({
     }),
     /** Planilha IPIP-NEO-120 (120 questões) */
     fetchResponsesIPIP120: publicProcedure.query(async () => {
-      const SHEET_ID = '1gnBms78OFB2AqMjVjHSuZaT-Kg0qYqGmomPAWjDpWxI';
-      const SHEET_GID = '1030652843';
+      const SHEET_ID = '1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E';
+      const SHEET_GID = '1081644880';
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
       let response = await fetch(csvUrl, { redirect: 'follow' });
       
