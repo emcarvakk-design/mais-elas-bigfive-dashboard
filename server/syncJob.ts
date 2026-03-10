@@ -11,6 +11,7 @@
 import cron from 'node-cron';
 import { upsertBigfiveProfile } from './db';
 import { notifyOwner } from './_core/notification';
+import { SHEETS_CONFIG } from './sheetsConfig';
 
 // ─── Helpers de parsing CSV ───────────────────────────────────────────────────
 
@@ -268,8 +269,7 @@ async function fetchSheet(sheetId: string, gid: string): Promise<string> {
 }
 
 async function sync30q(): Promise<{ saved: number; errors: number }> {
-  const SHEET_ID = '1gStVG2NRfrQe7E2fGMU1RC2xwRd2ZGcX50oJHLeG-3U';
-  const GID = '724087005';
+  const { SHEET_ID, GID } = SHEETS_CONFIG.Q30;
   const csv = await fetchSheet(SHEET_ID, GID);
 
   const lines = csv.split('\n').filter(l => l.trim());
@@ -325,8 +325,7 @@ async function sync30q(): Promise<{ saved: number; errors: number }> {
 }
 
 async function syncIPIP120(): Promise<{ saved: number; errors: number }> {
-  const SHEET_ID = '1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E';
-  const GID = '1081644880';
+  const { SHEET_ID, GID } = SHEETS_CONFIG.IPIP120;
   const csv = await fetchSheet(SHEET_ID, GID);
 
   const lines = csv.split('\n').filter(l => l.trim());

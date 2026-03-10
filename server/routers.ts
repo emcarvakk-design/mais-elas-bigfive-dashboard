@@ -19,6 +19,7 @@ import {
 } from "./db";
 import { syncRodaProfiles } from "./syncJobMaisElas";
 import { invokeLLM } from "./_core/llm";
+import { SHEETS_CONFIG } from './sheetsConfig';
 
 // ─── Zod schema para uma dimensão Big Five ───────────────────────────────────
 const dimensionSchema = z.object({
@@ -229,8 +230,7 @@ export const appRouter = router({
   sheets: router({
     /** Planilha original (30 questões) */
     fetchResponses: publicProcedure.query(async () => {
-      const SHEET_ID = '1gStVG2NRfrQe7E2fGMU1RC2xwRd2ZGcX50oJHLeG-3U';
-      const SHEET_GID = '724087005';
+      const { SHEET_ID, GID: SHEET_GID } = SHEETS_CONFIG.Q30;
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 
       // Seguir redirecionamentos manualmente (Google Sheets usa 307)
@@ -256,8 +256,7 @@ export const appRouter = router({
     }),
     /** Planilha IPIP-NEO-120 (120 questões) */
     fetchResponsesIPIP120: publicProcedure.query(async () => {
-      const SHEET_ID = '1b--xizm9DcwfsdpQTiSqs4GdF4vX0qqqV2blIAGM04E';
-      const SHEET_GID = '1081644880';
+      const { SHEET_ID, GID: SHEET_GID } = SHEETS_CONFIG.IPIP120;
       const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
       let response = await fetch(csvUrl, { redirect: 'follow' });
       
