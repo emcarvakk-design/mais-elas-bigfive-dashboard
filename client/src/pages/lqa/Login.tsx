@@ -27,22 +27,22 @@ export default function LQALogin({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 mb-4 shadow-lg">
             <Lock className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-1">LQA Dashboard</h1>
-          <p className="text-slate-400 text-sm">Leadership Quality Assessment</p>
-          <p className="text-slate-500 text-xs mt-1">Acesso restrito — Erica & Monica</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">LQA Dashboard</h1>
+          <p className="text-gray-500 text-sm">Leadership Quality Assessment</p>
+          <p className="text-gray-400 text-xs mt-1">Acesso restrito — Erica & Monica</p>
         </div>
 
-        <Card className="bg-slate-800 border-slate-700 p-8">
+        <Card className="bg-white border-gray-200 p-8 shadow-md">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Senha de acesso
               </label>
               <div className="relative">
@@ -51,32 +51,32 @@ export default function LQALogin({ onLogin }: LoginProps) {
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Digite a senha"
-                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 pr-10"
+                  className="bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 pr-10"
                   autoFocus
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {error && (
-                <p className="text-red-400 text-sm mt-2">{error}</p>
+                <p className="text-red-600 text-sm mt-2">{error}</p>
               )}
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm"
             >
               Entrar
             </Button>
           </form>
         </Card>
 
-        <p className="text-center text-slate-600 text-xs mt-6">
+        <p className="text-center text-gray-400 text-xs mt-6">
           LQA · Sistema de Diagnóstico de Liderança · Confidencial
         </p>
       </div>
