@@ -1,0 +1,77 @@
+{
+  "yPEedaX": {
+    "respondente": {
+      "nome": "Erica Carvalho",
+      "email": "emcarvakk@hotmail.com",
+      "timestamp": "2026-05-27 13:01:20"
+    },
+    "classificacao": {
+      "perfil_codigo": "P06",
+      "macrogrupo": "B",
+      "macrogrupo_nome": "B — Relação com Poder, Controle e Autoridade",
+      "perfil_nome": "Gestor Centralizador",
+      "confianca": "alta",
+      "evidencias_chave": [
+        "Q15: 'Acabo entrando e fazendo junto — é mais rápido e fico mais tranquilo quando faço eu mesmo'",
+        "Q16: 'Fico frustrado porque o padrão caiu, preferia ter feito eu mesmo'",
+        "Q20: 'Consigo resistir ao impulso de verificar o andamento antes do prazo combinado.: Às vezes'",
+        "Q51: 'Interrompo gentilmente e explico por que a abordagem não vai funcionar'",
+        "Q2 (2ª set): 'Quando você está convicto de uma análise e alguém do time apresenta dados que contradizem sua leitura, o que acontece?: Mantenho minha posição — tenho mais experiência para avaliar'"
+      ],
+      "perfil_secundario": "P10",
+      "blanchard": {
+        "quadrante": "S1",
+        "estilo_recomendado": "Coaching",
+        "nivel_competencia": "moderado",
+        "nivel_comprometimento": "variável",
+        "justificativa": "Erica tende a direcionar e centralizar para garantir resultados (S1), mas falha em sustentar o acompanhamento, o que prejudica a autonomia do time. Precisa desenvolver o estilo de coaching (S2) para capacitar o time e construir soluções."
+      },
+      "dilts": {
+        "nivel_dominante": "Comportamento",
+        "nivel_gap": "Capacidade",
+        "descricao": "Erica opera focada no 'fazer' e controlar o resultado (Comportamento), impulsionada por crenças de que sua intervenção é mais eficaz para manter padrões e velocidade. O gap reside na sua capacidade de sustentar o desenvolvimento do time e a consistência operacional.",
+        "impacto_lideranca": "Seu estilo de liderança oscila entre direcionar excessivamente e delegar de forma superficial, impactando a autonomia do time e a sustentabilidade dos resultados."
+      },
+      "meta_programas": {
+        "aproximacao_evitacao": "Misto",
+        "interno_externo": "Interno",
+        "opcoes_procedimentos": "Misto",
+        "global_detalhe": "Misto",
+        "proativo_reativo": "Misto",
+        "padrao_dominante": "Evitação (de conflito social/emocional) e Reativo (sob pressão)",
+        "implicacao_operacional": "Erica demonstra forte evitação de conflitos e emoções negativas, o que a leva a suavizar mensagens e evitar confrontos diretos. Sua convicção interna (raramente muda de posição) e a reatividade sob pressão resultam em ações impulsivas e inconsistência na gestão."
+      },
+      "fpc": {
+        "dimensao_dominante": "Controle e Execução",
+        "padrao_dominante": "Centralização impulsiva e reativa, com foco em resultados imediatos e dificuldade em delegar e sustentar processos.",
+        "risco_operacional": "Baixa autonomia do time, esgotamento da liderança, inconsistência na entrega e falha na consolidação de novas iniciativas.",
+        "forca_central": "Engajamento para a entrega de resultados, senso de urgência e disposição para intervir e resolver problemas diretamente."
+      },
+      "lqa_consolidado": {
+        "gap_prioritario": "Transição de uma mentalidade 'faço eu mesmo para garantir' para 'desenvolvo o time para sustentar'. Isto envolve a capacidade de delegar com estrutura e confiança, e de gerir suas próprias reações de ansiedade e evitação de conflito.",
+        "forca_dominante": "Engajamento e proatividade na resolução de problemas e entrega de resultados.",
+        "risco_ativado": "A inconsistência operacional e a baixa autonomia do time, decorrentes da centralização e da falta de follow-through, estão ativadas, podendo levar a estresse da liderança e perda de talentos no longo prazo. A reatividade emocional é um risco latente.",
+        "acao_inicial": "Foco no desenvolvimento da capacidade de delegação com monitoramento estruturado, e na gestão das próprias reações de ansiedade sob pressão. Praticar o 'perguntar antes de responder' e 'observar antes de intervir'.",
+        "evidencia_esperada": "Redução na frequência de 'entrar e fazer junto' (Q15), aumento da consistência no acompanhamento (Q11), e melhora na capacidade de sustentar iniciativas (Q26, 2ª set). Aumento na clareza e transparência na tomada de decisão (Q23) e gestão de conflitos.",
+        "nota_metodologica": "Observa-se uma tensão entre o desejo de 'fazer certo e rápido' e a dificuldade de 'deixar o time fazer e sustentar'. As contradições nas respostas (ex: Q19 vs Q48; Q30 vs Q6 [2ª set]; Q41 vs Q30 [2ª set]) sugerem um líder em processo de conscientização, mas com padrões comportamentais ainda atuantes e não totalmente integrados. A cultura 'orientada a resultado' e 'pressão moderada' podem reforçar alguns comportamentos de centralização e pressa. O perfil P29 (Ansioso por Velocidade) atua como um forte driver para a centralização."
+      },
+      "_biblioteca": {
+        "forcas": "Senso de dono; velocidade de execução; alto padrão; capacidade de resolver problemas complexos; leitura rápida de risco; presença ativa e engajada; confiabilidade operacional.",
+        "riscos": "Reduz autonomia do time; cria dependência; inibe protagonismo; impede amadurecimento dos liderados; gera sobrecarga no próprio gestor; o time para de pensar porque sabe que o gestor vai resolver.",
+        "impacto_equipe": "Gera time dependente e pouco protagonista. Os liderados aprendem a esperar a decisão do gestor em vez de desenvolver julgamento próprio. Em momentos de ausência do gestor, o time trava. A cultura de execução substitui a cultura de desenvolvimento.",
+        "frases_tipicas": "Deixa comigo. / \"Eu resolvo.\" / \"Vou verificar pessoalmente.\" / \"Não precisa se preocupar, eu cuido.\" / \"Assim não vai funcionar, faz do jeito que eu disse.\"",
+        "trilha_especifica": "Foco: Gestão da Incerteza e Confiança Escalonada.\n\nTarefa 1: Identificar uma tarefa de baixo risco e delegar 100%, proibindo-se de conferir o status por 48 horas.\n\nTarefa 2: Criar \"Acordos de Resultados\" em vez de \"Passos de Execução\". Foque no quê, não no como.\n\nTarefa 3: Micro-learning sobre \"Custo de Oportunidade\": Calcular quanto tempo você perde operando que poderia estar usando para estratégia. Mapear o crescimento dos colaboradores\n\nTarefa 4: Agendar reuniões de \"Check-point\" semanais (e "
+      },
+      "_blanchard_biblioteca": {
+        "quadrante": "S1 — Directing",
+        "estilo": "Directing",
+        "diretiva": "ALTA",
+        "apoio": "BAIXO",
+        "codigo": "P06",
+        "nome": "Gestor Centralizador",
+        "porque": "Controla tudo, decide sozinho, dá instruções detalhadas sem desenvolver o time.",
+        "padrao": "Ansiedade de controle como proteção de identidade técnica."
+      }
+    }
+  }
+}

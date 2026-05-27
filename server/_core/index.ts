@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startSyncScheduler, runSync } from "../syncJob";
+import { createLQARouter } from "../lqaRouter";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -46,6 +47,9 @@ async function startServer() {
       res.status(500).json({ success: false, message: String(error) });
     }
   });
+
+  // LQA API — rotas para o módulo de diagnóstico de liderança
+  app.use('/api/lqa', createLQARouter());
 
   // tRPC API
   app.use(
