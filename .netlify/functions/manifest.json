@@ -1,0 +1,1 @@
+{"functions":[{"bundler":"esbuild","buildData":{"runtimeAPIVersion":1},"mainFile":"/home/ubuntu/lqa-dash/netlify/functions/lqa-profiles.mjs","name":"lqa-profiles","priority":10,"runtimeVersion":"nodejs22.x","path":"/home/ubuntu/lqa-dash/.netlify/functions/lqa-profiles.zip","runtime":"js"}],"system":{"arch":"x64","platform":"linux"},"timestamp":1779893570712,"version":1}

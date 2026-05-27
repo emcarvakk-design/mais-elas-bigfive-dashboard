@@ -3,39 +3,38 @@ import { LQAResultados } from './types';
 
 export function useLQAData() {
   const [data, setData] = useState<LQAResultados | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
+
+    // Estratégia: tenta JSON estático primeiro (sempre disponível no Netlify)
+    // Se estiver rodando localmente com servidor Node, a API também funciona
     try {
-      // Tenta primeiro a API (ambiente local com servidor Node.js)
-      // Se falhar, busca o JSON estático embutido no build
-      let json: LQAResultados | null = null;
-
-      try {
-        const res = await fetch('/api/lqa/profiles');
-        if (res.ok) {
-          const apiData = await res.json();
-          // Suporte a dois formatos: {data: {...}} ou diretamente o Record<id, LQAProfile>
-          json = apiData.data ?? apiData;
-        }
-      } catch {
-        // API não disponível — tenta JSON estático
+      const res = await fetch('/lqa_resultados.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const contentType = res.headers.get('content-type') ?? '';
+      if (!contentType.includes('json')) {
+        throw new Error('Resposta não é JSON — arquivo não encontrado');
       }
-
-      if (!json) {
-        const res = await fetch('/lqa_resultados.json');
-        if (!res.ok) throw new Error(`Erro ao carregar dados: HTTP ${res.status}`);
-        json = await res.json();
-      }
-
+      const json: LQAResultados = await res.json();
       setData(json);
       setLastSync(new Date());
     } catch (e: any) {
-      setError(e.message ?? 'Erro ao carregar dados LQA');
+      // Fallback: tenta a API do servidor Node.js (ambiente local)
+      try {
+        const res2 = await fetch('/api/lqa/profiles');
+        if (!res2.ok) throw new Error(`API HTTP ${res2.status}`);
+        const apiData = await res2.json();
+        const json: LQAResultados = apiData.data ?? apiData;
+        setData(json);
+        setLastSync(new Date());
+      } catch (e2: any) {
+        setError('Não foi possível carregar os dados. Verifique a conexão e tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
