@@ -10,27 +10,26 @@
       "macrogrupo": "B",
       "macrogrupo_nome": "B — Relação com Poder, Controle e Autoridade",
       "perfil_nome": "Gestor Centralizador",
-      "confianca": "alta",
+      "confianca": "baixa",
       "evidencias_chave": [
-        "Q15: 'Acabo entrando e fazendo junto — é mais rápido e fico mais tranquilo quando faço eu mesmo'",
-        "Q16: 'Fico frustrado porque o padrão caiu, preferia ter feito eu mesmo'",
-        "Q20: 'Consigo resistir ao impulso de verificar o andamento antes do prazo combinado.: Às vezes'",
-        "Q51: 'Interrompo gentilmente e explico por que a abordagem não vai funcionar'",
-        "Q2 (2ª set): 'Quando você está convicto de uma análise e alguém do time apresenta dados que contradizem sua leitura, o que acontece?: Mantenho minha posição — tenho mais experiência para avaliar'"
+        "Pergunta 15: 'Acabo entrando e fazendo junto — é mais rápido e fico mais tranquilo quando faço eu mesmo'",
+        "Pergunta 16: 'Fico frustrado porque o padrão caiu, preferia ter feito eu mesmo'",
+        "Pergunta 20: 'Consigo resistir ao impulso de verificar o andamento antes do prazo combinado: Às vezes'",
+        "Pergunta 23: 'Quando comunico uma decisão ao time, costumo explicar o raciocínio por trás dela: Raramente'"
       ],
-      "perfil_secundario": "P10",
+      "perfil_secundario": "P29",
       "blanchard": {
-        "quadrante": "S1",
+        "quadrante": "S2",
         "estilo_recomendado": "Coaching",
         "nivel_competencia": "moderado",
         "nivel_comprometimento": "variável",
-        "justificativa": "Erica tende a direcionar e centralizar para garantir resultados (S1), mas falha em sustentar o acompanhamento, o que prejudica a autonomia do time. Precisa desenvolver o estilo de coaching (S2) para capacitar o time e construir soluções."
+        "justificativa": "A gestora percebe uma competência moderada do time, mas com comprometimento variável ou inconstante, levando-a a intervir. O estilo Coaching é recomendado para desenvolver a autonomia e o engajamento da equipe, fomentando a autoconfiança e a capacidade de resolução de problemas."
       },
       "dilts": {
         "nivel_dominante": "Comportamento",
         "nivel_gap": "Capacidade",
-        "descricao": "Erica opera focada no 'fazer' e controlar o resultado (Comportamento), impulsionada por crenças de que sua intervenção é mais eficaz para manter padrões e velocidade. O gap reside na sua capacidade de sustentar o desenvolvimento do time e a consistência operacional.",
-        "impacto_lideranca": "Seu estilo de liderança oscila entre direcionar excessivamente e delegar de forma superficial, impactando a autonomia do time e a sustentabilidade dos resultados."
+        "descricao": "Erica opera fortemente no nível de Comportamento, tomando ações diretas como centralizar tarefas e pressionar por resultados. O gap principal está na Capacidade de delegar efetivamente, de regular sua ansiedade sob pressão e de sustentar a autonomia do time.",
+        "impacto_lideranca": "Limita o desenvolvimento da equipe e cria dependência, enquanto a própria líder se sobrecarrega e experimenta altos níveis de estresse."
       },
       "meta_programas": {
         "aproximacao_evitacao": "Misto",
@@ -38,39 +37,80 @@
         "opcoes_procedimentos": "Misto",
         "global_detalhe": "Misto",
         "proativo_reativo": "Misto",
-        "padrao_dominante": "Evitação (de conflito social/emocional) e Reativo (sob pressão)",
-        "implicacao_operacional": "Erica demonstra forte evitação de conflitos e emoções negativas, o que a leva a suavizar mensagens e evitar confrontos diretos. Sua convicção interna (raramente muda de posição) e a reatividade sob pressão resultam em ações impulsivas e inconsistência na gestão."
+        "padrao_dominante": "Predominantemente interno para padrões e evitação de perdas, manifestando uma forte inclinação reativa à percepção de risco ou lentidão, embora consiga ser proativa em análise.",
+        "implicacao_operacional": "A busca por controle e a reatividade à lentidão podem levar à sobrecarga do líder e inibição da autonomia do time, com decisões focadas na mitigação de riscos percebidos."
       },
       "fpc": {
         "dimensao_dominante": "Controle e Execução",
-        "padrao_dominante": "Centralização impulsiva e reativa, com foco em resultados imediatos e dificuldade em delegar e sustentar processos.",
-        "risco_operacional": "Baixa autonomia do time, esgotamento da liderança, inconsistência na entrega e falha na consolidação de novas iniciativas.",
-        "forca_central": "Engajamento para a entrega de resultados, senso de urgência e disposição para intervir e resolver problemas diretamente."
+        "padrao_dominante": "Um padrão de alto envolvimento na execução e controle, motivado por um alto padrão e ansiedade em relação ao ritmo, levando à centralização de tarefas e pressão sobre o time.",
+        "risco_operacional": "O time se torna dependente e o líder sofre de sobrecarga e esgotamento, além de decisões serem apressadas ou inconsistentes.",
+        "forca_central": "Alta capacidade de entrega pessoal e senso de urgência para mobilizar resultados."
       },
       "lqa_consolidado": {
-        "gap_prioritario": "Transição de uma mentalidade 'faço eu mesmo para garantir' para 'desenvolvo o time para sustentar'. Isto envolve a capacidade de delegar com estrutura e confiança, e de gerir suas próprias reações de ansiedade e evitação de conflito.",
-        "forca_dominante": "Engajamento e proatividade na resolução de problemas e entrega de resultados.",
-        "risco_ativado": "A inconsistência operacional e a baixa autonomia do time, decorrentes da centralização e da falta de follow-through, estão ativadas, podendo levar a estresse da liderança e perda de talentos no longo prazo. A reatividade emocional é um risco latente.",
-        "acao_inicial": "Foco no desenvolvimento da capacidade de delegação com monitoramento estruturado, e na gestão das próprias reações de ansiedade sob pressão. Praticar o 'perguntar antes de responder' e 'observar antes de intervir'.",
-        "evidencia_esperada": "Redução na frequência de 'entrar e fazer junto' (Q15), aumento da consistência no acompanhamento (Q11), e melhora na capacidade de sustentar iniciativas (Q26, 2ª set). Aumento na clareza e transparência na tomada de decisão (Q23) e gestão de conflitos.",
-        "nota_metodologica": "Observa-se uma tensão entre o desejo de 'fazer certo e rápido' e a dificuldade de 'deixar o time fazer e sustentar'. As contradições nas respostas (ex: Q19 vs Q48; Q30 vs Q6 [2ª set]; Q41 vs Q30 [2ª set]) sugerem um líder em processo de conscientização, mas com padrões comportamentais ainda atuantes e não totalmente integrados. A cultura 'orientada a resultado' e 'pressão moderada' podem reforçar alguns comportamentos de centralização e pressa. O perfil P29 (Ansioso por Velocidade) atua como um forte driver para a centralização."
+        "gap_prioritario": "Transição da mentalidade de 'fazer por' para 'capacitar para que façam', focando na delegação efetiva e no desenvolvimento da autonomia do time.",
+        "forca_dominante": "Senso de dono e alta energia para garantir a entrega de resultados, com uma capacidade analítica para planejar as ações.",
+        "risco_ativado": "A centralização e a pressão por velocidade inibem o desenvolvimento do time e geram um ambiente de estresse crônico, com o risco de esgotamento do líder.",
+        "acao_inicial": "Praticar a delegação de tarefas críticas com acompanhamento estruturado, resistindo ao impulso de intervir e focando em perguntas que promovam a solução do time.",
+        "evidencia_esperada": "Diminuição da intervenção direta em tarefas operacionais e aumento da proatividade do time na resolução de problemas.",
+        "nota_metodologica": "Há uma tensão significativa entre a tendência centralizadora/reativa e a sensibilidade relacional, indicando um desafio na integração de diferentes estilos de liderança."
+      }
+    }
+  },
+  "GxQKVWp": {
+    "respondente": {
+      "nome": "Wanderson da Silva Borges",
+      "email": "wandersonborges.itb@gmail.com",
+      "timestamp": "2026-05-27 23:02:09"
+    },
+    "classificacao": {
+      "perfil_codigo": "P06",
+      "macrogrupo": "B",
+      "macrogrupo_nome": "B — Relação com Poder, Controle e Autoridade",
+      "perfil_nome": "Gestor Centralizador — Desconfiança no \"outro\"",
+      "confianca": "media",
+      "evidencias_chave": [
+        "15: 'Acabo entrando e fazendo junto — é mais rápido e fico mais tranquilo quando faço eu mesmo'",
+        "16: 'Fico frustrado porque o padrão caiu, preferia ter feito eu mesmo'",
+        "20: 'Às vezes'",
+        "21: 'Às vezes'",
+        "25: 'Fico irritado — a lentidão me incomoda visceralmente e preciso nomear isso'"
+      ],
+      "perfil_secundario": "P29",
+      "blanchard": {
+        "quadrante": "S2",
+        "estilo_recomendado": "Coaching",
+        "nivel_competencia": "moderado",
+        "nivel_comprometimento": "variável",
+        "justificativa": "O líder demonstra uma tendência a intervir e fazer junto para garantir o padrão e a velocidade, indicando que percebe no time uma competência ainda em desenvolvimento ou um comprometimento variável. Embora mostre iniciativas de apoio, a necessidade de controle sugere que o time se beneficiaria de um estilo Coaching para desenvolver autonomia."
       },
-      "_biblioteca": {
-        "forcas": "Senso de dono; velocidade de execução; alto padrão; capacidade de resolver problemas complexos; leitura rápida de risco; presença ativa e engajada; confiabilidade operacional.",
-        "riscos": "Reduz autonomia do time; cria dependência; inibe protagonismo; impede amadurecimento dos liderados; gera sobrecarga no próprio gestor; o time para de pensar porque sabe que o gestor vai resolver.",
-        "impacto_equipe": "Gera time dependente e pouco protagonista. Os liderados aprendem a esperar a decisão do gestor em vez de desenvolver julgamento próprio. Em momentos de ausência do gestor, o time trava. A cultura de execução substitui a cultura de desenvolvimento.",
-        "frases_tipicas": "Deixa comigo. / \"Eu resolvo.\" / \"Vou verificar pessoalmente.\" / \"Não precisa se preocupar, eu cuido.\" / \"Assim não vai funcionar, faz do jeito que eu disse.\"",
-        "trilha_especifica": "Foco: Gestão da Incerteza e Confiança Escalonada.\n\nTarefa 1: Identificar uma tarefa de baixo risco e delegar 100%, proibindo-se de conferir o status por 48 horas.\n\nTarefa 2: Criar \"Acordos de Resultados\" em vez de \"Passos de Execução\". Foque no quê, não no como.\n\nTarefa 3: Micro-learning sobre \"Custo de Oportunidade\": Calcular quanto tempo você perde operando que poderia estar usando para estratégia. Mapear o crescimento dos colaboradores\n\nTarefa 4: Agendar reuniões de \"Check-point\" semanais (e "
+      "dilts": {
+        "nivel_dominante": "Comportamento",
+        "nivel_gap": "Capacidade",
+        "descricao": "O líder opera primariamente no nível de Comportamento, focando nas ações e na execução, frequentemente intervindo para garantir o resultado. O gap principal reside na Capacidade, tanto a sua de delegar e confiar plenamente, quanto a do time de desenvolver autonomia e performance consistente.",
+        "impacto_lideranca": "Inibe o desenvolvimento do time e cria dependência, limitando o potencial de crescimento e sucessão."
       },
-      "_blanchard_biblioteca": {
-        "quadrante": "S1 — Directing",
-        "estilo": "Directing",
-        "diretiva": "ALTA",
-        "apoio": "BAIXO",
-        "codigo": "P06",
-        "nome": "Gestor Centralizador",
-        "porque": "Controla tudo, decide sozinho, dá instruções detalhadas sem desenvolver o time.",
-        "padrao": "Ansiedade de controle como proteção de identidade técnica."
+      "meta_programas": {
+        "aproximacao_evitacao": "Misto",
+        "interno_externo": "Interno",
+        "opcoes_procedimentos": "Misto",
+        "global_detalhe": "Misto",
+        "proativo_reativo": "Misto",
+        "padrao_dominante": "O líder demonstra um padrão predominantemente Interno para seus critérios de qualidade e velocidade. Sua abordagem é Mista entre proativa na resolução de problemas e reativa à baixa performance do time, com forte inclinação a focar em Detalhes e Procedimentos para garantir a execução.",
+        "implicacao_operacional": "Essa configuração pode levar o líder a sobrecarregar-se, inibir a autonomia do time e dificultar a delegação efetiva, pois confia mais em sua própria capacidade de execução para alcançar os resultados desejados."
+      },
+      "fpc": {
+        "dimensao_dominante": "Controle e Execução",
+        "padrao_dominante": "Um padrão de intervenção ativa e controle direto para garantir a qualidade e a velocidade da execução, motivado pela percepção de que sua própria performance é superior ou mais confiável que a do time.",
+        "risco_operacional": "O principal risco é a sobrecarga do líder e a dependência do time, que não desenvolve plena autonomia e capacidade de decisão, resultando em gargalos e estagnação do crescimento dos liderados.",
+        "forca_central": "Sua alta capacidade de execução, senso de dono e foco em resultados, permitindo resolver problemas complexos rapidamente e garantir padrões elevados, especialmente em cenários de alta pressão."
+      },
+      "lqa_consolidado": {
+        "gap_prioritario": "Desenvolver a capacidade de delegar efetivamente e construir confiança na autonomia e competência do time, permitindo que os liderados cresçam e assumam maior responsabilidade sem sua intervenção direta.",
+        "forca_dominante": "Senso de dono e capacidade de alta execução, garantindo padrões de qualidade e velocidade.",
+        "risco_ativado": "Inibição do protagonismo do time e criação de dependência, podendo levar à sobrecarga do líder e ao desalinhamento silencioso.",
+        "acao_inicial": "Praticar a delegação progressiva, definindo expectativas claras e limites para a intervenção, e oferecer feedback focado no desenvolvimento da autonomia, em vez da solução direta.",
+        "evidencia_esperada": "Redução da frequência de intervenção direta do líder, aumento da proatividade do time na resolução de problemas e maior autonomia em decisões operacionais.",
+        "nota_metodologica": "A classificação de 'média' reflete a análise de um único formulário. A validação com Form 2 e 3 é crucial para aprofundar e refinar o diagnóstico, especialmente na distinção entre P06 (desconfiança) e P28 (compulsão), e a intensidade da P29 (ansiedade por velocidade)."
       }
     }
   }
