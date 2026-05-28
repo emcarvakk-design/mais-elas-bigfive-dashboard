@@ -3,8 +3,9 @@ import { useLocation } from 'wouter';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, RefreshCw, AlertCircle, LogOut, BarChart3, Clock, ChevronRight, Shield, Zap } from 'lucide-react';
+import { Users, RefreshCw, AlertCircle, LogOut, BarChart3, Clock, ChevronRight, Shield, Zap, Bell } from 'lucide-react';
 import { useLQAData } from '@/lib/lqa/useLQAData';
+import { useAlertasLQA } from '@/lib/lqa/useAlertasLQA';
 import { MG_COLORS, BLANCHARD_LABELS } from '@/lib/lqa/types';
 
 interface DashboardProps {
@@ -13,7 +14,8 @@ interface DashboardProps {
 
 export default function LQADashboard({ onLogout }: DashboardProps) {
   const [, setLocation] = useLocation();
-  const { data, loading, error, lastSync, refetch } = useLQAData();
+  const { data, loading, error, lastSync, refetch, syncFromSheets, syncing, syncResult } = useLQAData();
+  const { totalNovos: totalAlertasNovos } = useAlertasLQA();
 
   const profiles = data ? Object.entries(data) : [];
 
@@ -62,6 +64,20 @@ export default function LQADashboard({ onLogout }: DashboardProps) {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setLocation('/lqa/alertas')}
+              className="relative text-amber-700 border-amber-200 hover:bg-amber-50 text-xs font-medium"
+            >
+              <Bell className="w-3.5 h-3.5 mr-1.5" />
+              Alertas
+              {totalAlertasNovos > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
+                  {totalAlertasNovos}
+                </span>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setLocation('/lqa/motor')}
               className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 text-xs font-medium"
             >
@@ -69,13 +85,14 @@ export default function LQADashboard({ onLogout }: DashboardProps) {
               Motor — Inbox
             </Button>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={refetch}
-              disabled={loading}
-              className="text-gray-500 hover:text-gray-900"
+              onClick={syncFromSheets}
+              disabled={syncing || loading}
+              className="text-green-700 border-green-200 hover:bg-green-50 text-xs font-medium"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Sincronizando...' : 'Sincronizar'}
             </Button>
             <Button
               variant="ghost"

@@ -4,6 +4,11 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/api/lqa/sync"
+  to = "/.netlify/functions/lqa-sync"
+  status = 200
+
+[[redirects]]
   from = "/api/lqa/*"
   to = "/.netlify/functions/lqa-profiles"
   status = 200

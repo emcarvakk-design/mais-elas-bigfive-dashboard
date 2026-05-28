@@ -4,6 +4,7 @@ import LQALogin from './Login';
 import LQADashboard from './Dashboard';
 import LQAProfileDetail from './ProfileDetail';
 import LQAMotorQueue from './MotorQueue';
+import LQAAlertas from './Alertas';
 
 function checkAuth(): boolean {
   return sessionStorage.getItem('lqa_auth') === 'true';
@@ -37,6 +38,16 @@ export function LQAMotorRoute() {
   }
 
   return <LQAMotorQueue />;
+}
+
+export function LQAAlertasRoute() {
+  const [authenticated, setAuthenticated] = useState(checkAuth);
+
+  if (!authenticated) {
+    return <LQALogin onLogin={() => setAuthenticated(true)} />;
+  }
+
+  return <LQAAlertas />;
 }
 
 export function LQAProfileRoute() {

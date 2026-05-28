@@ -1,15 +1,15 @@
-functionsDirectory = "/home/ubuntu/lqa-dash/netlify/functions"
+functionsDirectory = "/home/ubuntu/mais-elas-bigfive-dashboard/netlify/functions"
 functionsDirectoryOrigin = "config-v1"
 redirectsOrigin = "config"
 plugins = []
 headers = []
 
 [build]
-publish = "/home/ubuntu/lqa-dash/dist/public"
+publish = "/home/ubuntu/mais-elas-bigfive-dashboard/dist/public"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "pnpm run build && cp lqa_resultados.json dist/public/"
-functions = "/home/ubuntu/lqa-dash/netlify/functions"
+functions = "/home/ubuntu/mais-elas-bigfive-dashboard/netlify/functions"
 
 [build.environment]
 
@@ -28,6 +28,18 @@ functions = "/home/ubuntu/lqa-dash/netlify/functions"
 [functions]
 
 [functions."*"]
+
+[[redirects]]
+from = "/api/lqa/sync"
+to = "/.netlify/functions/lqa-sync"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
 
 [[redirects]]
 from = "/api/lqa/*"
