@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, RefreshCw, AlertCircle, LogOut, BarChart3, Clock, ChevronRight, Shield } from 'lucide-react';
+import { Users, RefreshCw, AlertCircle, LogOut, BarChart3, Clock, ChevronRight, Shield, Zap } from 'lucide-react';
 import { useLQAData } from '@/lib/lqa/useLQAData';
 import { MG_COLORS, BLANCHARD_LABELS } from '@/lib/lqa/types';
 
@@ -59,6 +59,15 @@ export default function LQADashboard({ onLogout }: DashboardProps) {
                 Sync: {lastSync.toLocaleTimeString('pt-BR')}
               </span>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation('/lqa/motor')}
+              className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 text-xs font-medium"
+            >
+              <Zap className="w-3.5 h-3.5 mr-1.5" />
+              Motor — Inbox
+            </Button>
             <Button
               variant="ghost"
               size="sm"

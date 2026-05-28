@@ -3,6 +3,7 @@ import { useRoute } from 'wouter';
 import LQALogin from './Login';
 import LQADashboard from './Dashboard';
 import LQAProfileDetail from './ProfileDetail';
+import LQAMotorQueue from './MotorQueue';
 
 function checkAuth(): boolean {
   return sessionStorage.getItem('lqa_auth') === 'true';
@@ -26,6 +27,16 @@ export function LQARoot() {
   }
 
   return <LQADashboard onLogout={handleLogout} />;
+}
+
+export function LQAMotorRoute() {
+  const [authenticated, setAuthenticated] = useState(checkAuth);
+
+  if (!authenticated) {
+    return <LQALogin onLogin={() => setAuthenticated(true)} />;
+  }
+
+  return <LQAMotorQueue />;
 }
 
 export function LQAProfileRoute() {

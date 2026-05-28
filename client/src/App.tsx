@@ -11,7 +11,7 @@ import Compare from './pages/Compare';
 import TestApp from './pages/TestApp';
 import MaisElasDashboard from './pages/mais-elas/Dashboard';
 import MaisElasProfile from './pages/mais-elas/ProfileDetail';
-import { LQARoot, LQAProfileRoute } from './pages/lqa';
+import { LQARoot, LQAProfileRoute, LQAMotorRoute } from './pages/lqa';
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,6 +25,7 @@ function Router() {
       <Route path={"/mais-elas/perfil/:id"} component={MaisElasProfile} />
       <Route path={"/lqa"} component={LQARoot} />
       <Route path={"/lqa/perfil/:id"} component={LQAProfileRoute} />
+      <Route path={"/lqa/motor"} component={LQAMotorRoute} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
