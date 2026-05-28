@@ -27,6 +27,8 @@ function supabaseRowsToLQAResultados(rows: any[]): LQAResultados {
         meta_programas: row.meta_programas ?? {},
         fpc: row.fpc ?? {},
         lqa_consolidado: row.lqa_consolidado ?? {},
+        // _biblioteca vem embutido em raw_form1 quando salvo via sync
+        _biblioteca: row.raw_form1?._biblioteca ?? null,
       },
     };
   }
