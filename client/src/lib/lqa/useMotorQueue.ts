@@ -85,15 +85,21 @@ export function useMotorQueue() {
   }, [fetchQueue]);
 
   const aprovar = useCallback(
-    async (id: string, textoFinal: string, textoOriginal: string) => {
+    async (id: string, textoFinal: string, textoOriginal: string, notasErica?: string, observacaoMonica?: string) => {
       const foiEditado = textoFinal.trim() !== textoOriginal.trim();
+      const payload: Record<string, unknown> = {
+        status: 'aprovado',
+        texto_editado: foiEditado ? textoFinal : null,
+        aprovado_at: new Date().toISOString(),
+      };
+      if (notasErica) payload.erica_edit_notes = notasErica;
+      if (observacaoMonica) {
+        payload.observacao_monica = observacaoMonica;
+        payload.observacao_monica_at = new Date().toISOString();
+      }
       await supabaseFetch(`/rest/v1/lqa_motor_queue?id=eq.${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          status: 'aprovado',
-          texto_editado: foiEditado ? textoFinal : null,
-          aprovado_at: new Date().toISOString(),
-        }),
+        body: JSON.stringify(payload),
       });
       setItems((prev) => prev.filter((i) => i.id !== id));
     },
