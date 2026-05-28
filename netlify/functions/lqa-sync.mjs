@@ -372,9 +372,9 @@ export const handler = async (event) => {
   }
 
   try {
-    // 1. Buscar dados já processados no Supabase
-    const existentes = await supabaseGet('lqa_resultados?select=id,confianca');
-    const existentesMap = new Map(existentes.map(r => [r.id, r.confianca]));
+    // 1. Buscar dados já processados no Supabase (incluindo raw_form1 para preservar _biblioteca)
+    const existentes = await supabaseGet('lqa_resultados?select=id,confianca,raw_form1');
+    const existentesMap = new Map(existentes.map(r => [r.id, r]));
 
     // 2. Buscar Form 1 e Form 2 da Sheets
     const [csv1, csv2] = await Promise.all([
@@ -404,7 +404,8 @@ export const handler = async (event) => {
       if (!submissionId) continue;
 
       const jaExiste = existentesMap.has(submissionId);
-      const confiancaAtual = existentesMap.get(submissionId);
+      const existenteData = existentesMap.get(submissionId);
+      const confiancaAtual = existenteData?.confianca;
       const form2 = form2Map.get(submissionId) || null;
 
       // Pular se já existe com confiança alta e Form 2 não mudou
@@ -413,6 +414,11 @@ export const handler = async (event) => {
       // Classificar
       const classificacao = classificarRespondente(row, form2);
       const record = buildRecord(submissionId, row, form2, classificacao);
+
+      // Preservar _biblioteca existente no raw_form1 (não apagar enriquecimento manual)
+      if (jaExiste && existenteData?.raw_form1?._biblioteca) {
+        record.raw_form1 = { ...record.raw_form1, _biblioteca: existenteData.raw_form1._biblioteca };
+      }
 
       await supabaseUpsert('lqa_resultados', record);
 
@@ -423,9 +429,9 @@ export const handler = async (event) => {
       }
     }
 
-    // 5. Buscar todos os resultados atualizados para retornar ao frontend
+    // 5. Buscar todos os resultados atualizados para retornar ao frontend (incluindo raw_form1 para _biblioteca)
     const todos = await supabaseGet(
-      'lqa_resultados?select=id,nome,email,timestamp,perfil_codigo,macrogrupo,macrogrupo_nome,perfil_nome,confianca,perfil_secundario,evidencias_chave,blanchard,dilts,meta_programas,fpc,lqa_consolidado&order=timestamp.desc'
+      'lqa_resultados?select=id,nome,email,timestamp,perfil_codigo,macrogrupo,macrogrupo_nome,perfil_nome,confianca,perfil_secundario,evidencias_chave,blanchard,dilts,meta_programas,fpc,lqa_consolidado,raw_form1&order=timestamp.desc'
     );
 
     return {

@@ -49,7 +49,7 @@ export function useLQAData() {
     try {
       // Fonte primária: Supabase (atualizado pelo sync)
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/lqa_resultados?select=id,nome,email,timestamp,perfil_codigo,macrogrupo,macrogrupo_nome,perfil_nome,confianca,perfil_secundario,evidencias_chave,blanchard,dilts,meta_programas,fpc,lqa_consolidado&order=timestamp.desc`,
+        `${SUPABASE_URL}/rest/v1/lqa_resultados?select=id,nome,email,timestamp,perfil_codigo,macrogrupo,macrogrupo_nome,perfil_nome,confianca,perfil_secundario,evidencias_chave,blanchard,dilts,meta_programas,fpc,lqa_consolidado,raw_form1&order=timestamp.desc`,
         {
           headers: {
             apikey: SUPABASE_KEY,
